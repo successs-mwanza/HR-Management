@@ -263,7 +263,7 @@ function IncomeExpense() {
                 />
               </div>
 
-              <div className="form-group full-width">
+              <div className="form-group">
                 <label>Description</label>
                 <input
                   type="text"
@@ -279,6 +279,7 @@ function IncomeExpense() {
               <button type="submit" className="btn-submit">
                 Add Transaction
               </button>
+ 
               <button
                 type="button"
                 className="btn-cancel"

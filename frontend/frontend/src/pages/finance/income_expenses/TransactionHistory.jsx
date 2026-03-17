@@ -167,7 +167,7 @@ function TransactionHistory() {
                       <td>{transaction.category}</td>
                       <td>{transaction.description || "-"}</td>
                       <td className={`amount ${transaction.type}`}>
-                        {transaction.type === "income" ? "+" : "-"}${transaction.amount.toFixed(2)}
+                        {transaction.type === "income" ? "+" : ""}k{transaction.amount.toFixed(2)}
                       </td>
                       <td>
                         <button

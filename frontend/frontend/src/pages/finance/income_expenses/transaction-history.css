@@ -1,14 +1,15 @@
 .transaction-history-container {
-  margin-top: 80px;
+  margin-top: 2px;
   padding: 30px;
   background-color: #f4f6f9;
-  min-height: 100vh;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .th-header {
@@ -55,6 +56,9 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
   width: 100%;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
@@ -98,6 +102,9 @@
   gap: 15px;
   margin-bottom: 20px;
   width: 100%;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .summary-item {
@@ -152,6 +159,9 @@
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   width: 100%;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
   overflow-x: auto;
 }
 

@@ -10,6 +10,7 @@ import EditEmployee from "./pages/employee/EditEmployee";
 import IncomeExpense from "./pages/finance/income_expenses/incom_expense";
 import TransactionHistory from "./pages/finance/income_expenses/TransactionHistory";
 
+
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -20,6 +21,7 @@ function App() {
         <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
         <Routes>
+        
           <Route path="/" element={<EmployeesList />} />
           <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
           <Route path="/add-employee" element={<AddEmployee />} />
@@ -29,6 +31,7 @@ function App() {
         </Routes>
       </div>
     </BrowserRouter>
+    
   );
 }
 
