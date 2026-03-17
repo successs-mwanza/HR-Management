@@ -9,6 +9,8 @@ import AddEmployee from "./pages/employee/AddEmployee";
 import EditEmployee from "./pages/employee/EditEmployee";
 import IncomeExpense from "./pages/finance/income_expenses/incom_expense";
 import TransactionHistory from "./pages/finance/income_expenses/TransactionHistory";
+import Payroll from "./pages/finance/payroll/payroll";
+import Crm from "./landingPage/Crm";
 
 
 function App() {
@@ -21,7 +23,9 @@ function App() {
         <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
         <Routes>
-        
+ 
+         <Route path="/" element={<Crm/>}/>
+           <Route path="/payroll" element={<Payroll />} />
           <Route path="/" element={<EmployeesList />} />
           <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
           <Route path="/add-employee" element={<AddEmployee />} />

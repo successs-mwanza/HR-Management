@@ -15,9 +15,9 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       icon: "bi bi-people",
       children: [
       { name: "Employee Profile", icon:"bi bi-person", link: "/" },
-        { name: "Labour Management", icon:"bi bi-diagram-3", link: "/labour-management" },
+      
          { name: "Attendance", icon:"bi-calendar-check", link: "/attendance" },
-          { name: "leave Management", icon:"bi-calendar-check", link: "/leave" }
+       
       ]
       
     },

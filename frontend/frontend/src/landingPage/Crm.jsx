@@ -1,16 +1,45 @@
-import { useEffect,useState } from "react";
-import "./Crm.css";
+import "../landingPage/crm.css";
+import { useNavigate } from "react-router-dom";
 
 function Crm() {
-  const [crmData, setCrmData] = useState(null);
+  const navigate = useNavigate();
 
-  return Crm(
-<div className="crm-container">
-      <h1>Human Resource Management system (CRM)</h1>
-      <p>Manage your customer interactions and data effectively.</p>
+  return (
+    <div className="crm-container">
+      <h1>Human Resource Management System</h1>
+      <p>
+        Manage employees, payroll, and finances in one powerful system.
+      </p>
+
+      {/* Buttons */}
+      <div className="crm-buttons">
+        <button className="crm-btn primary" onClick={() => navigate("/employees")}>
+          Get Started
+        </button>
+        <button className="crm-btn secondary" onClick={() => navigate("/payroll")}>
+          View Payroll
+        </button>
+      </div>
+
+      {/* Feature Cards */}
+      <div className="crm-cards">
+        <div className="crm-card">
+          <h3>Employees</h3>
+          <p>Manage employee records and profiles easily.</p>
+        </div>
+
+        <div className="crm-card">
+          <h3>Payroll</h3>
+          <p>Process salaries, allowances, and deductions.</p>
+        </div>
+
+        <div className="crm-card">
+          <h3>Finance</h3>
+          <p>Track income, expenses, and transactions.</p>
+        </div>
+      </div>
     </div>
-
-
-  );         
+  );
 }
+
 export default Crm;

@@ -1,0 +1,98 @@
+.crm-container {
+  margin-top: 80px;
+  padding: 40px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  /* ✅ FIX */
+  justify-content: flex-start;
+}
+
+/* Title */
+.crm-container h1 {
+  font-size: 42px;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+/* Subtitle */
+.crm-container p {
+  font-size: 18px;
+  color: #cbd5f5;
+  margin-bottom: 40px;
+  max-width: 600px;
+}
+
+/* Buttons */
+.crm-buttons {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.crm-btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Primary button */
+.crm-btn.primary {
+  background: #007bff;
+  color: white;
+}
+
+.crm-btn.primary:hover {
+  background: #0056b3;
+}
+
+/* Secondary button */
+.crm-btn.secondary {
+  background: white;
+  color: #0f172a;
+}
+
+.crm-btn.secondary:hover {
+  background: #e2e8f0;
+}
+
+/* Cards Section */
+.crm-cards {
+  margin-top: 60px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 25px;
+  width: 100%;
+  max-width: 900px;
+}
+
+.crm-card {
+  background: white;
+  color: #0f172a;
+  padding: 25px;
+  border-radius: 12px;
+  text-align: left;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease;
+}
+
+.crm-card:hover {
+  transform: translateY(-5px);
+}
+
+.crm-card h3 {
+  margin-bottom: 10px;
+}
+
+.crm-card p {
+  font-size: 14px;
+  color: #555;
+}
