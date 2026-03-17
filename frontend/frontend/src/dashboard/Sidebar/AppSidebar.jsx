@@ -4,7 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./sidebar.css";
 
-function Sidebar() {
+function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
   const [openIndex, setOpenIndex] = useState(null);
 
@@ -71,7 +71,16 @@ function Sidebar() {
   };
 
   return (
-    <div className="sidebar shadow-lg">
+    <>
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="sidebar-overlay" 
+          onClick={() => setSidebarOpen(false)}
+        ></div>
+      )}
+      
+      <div className={`sidebar shadow-lg ${sidebarOpen ? "mobile-open" : ""}`}>
 
       <div className="sidebar-header text-center">
         <h5 className="fw-bold">
@@ -88,7 +97,12 @@ function Sidebar() {
             {/* Parent Menu */}
             <div
               className="sidebar-parent d-flex align-items-center justify-content-between"
-              onClick={() => toggleMenu(index)}
+              onClick={() => {
+                toggleMenu(index);
+                if (!item.children && item.link) {
+                  setSidebarOpen(false);
+                }
+              }}
             >
               <span>
                 <i className={`${item.icon} me-2`}></i>
@@ -107,7 +121,7 @@ function Sidebar() {
               <ul className="submenu">
                 {item.children && item.children.map((child, i) => (
                   <li key={i}>
-                    <Link to={child.link}>
+                    <Link to={child.link} onClick={() => setSidebarOpen(false)}>
                       <i className={`${child.icon} me-2`}></i>
                       {child.name}
                     </Link>
@@ -121,7 +135,8 @@ function Sidebar() {
 
       </ul>
 
-    </div>
+      </div>
+    </>
   );
 }
 
