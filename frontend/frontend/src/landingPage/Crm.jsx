@@ -13,12 +13,10 @@ function Crm() {
 
       {/* Buttons */}
       <div className="crm-buttons">
-        <button className="crm-btn primary" onClick={() => navigate("/employees")}>
+        <button className="crm-btn primary" onClick={() => navigate("/login")}>
           Get Started
         </button>
-        <button className="crm-btn secondary" onClick={() => navigate("/payroll")}>
-          View Payroll
-        </button>
+       
       </div>
 
       {/* Feature Cards */}

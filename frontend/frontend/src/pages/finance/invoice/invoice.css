@@ -1,0 +1,26 @@
+.invoice-container {
+  width: 600px;
+  margin: auto;
+  padding: 20px;
+}
+
+.invoice-container input {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px;
+}
+
+.item-row {
+  display: flex;
+  gap: 10px;
+}
+
+button {
+  margin-top: 10px;
+  padding: 10px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
