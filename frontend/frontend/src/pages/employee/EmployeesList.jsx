@@ -22,7 +22,7 @@ function EmployeesList() {
   const handleViewProfile = (id) => {
     navigate(`/employee-profile/${id}`);
   };
-
+ 
   const handleEdit = (id) => {
     navigate(`/edit-employee/${id}`);
   };

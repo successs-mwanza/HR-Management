@@ -41,9 +41,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       icon: "bi bi-pie-chart",
       link: "/budgeting"
     },
-    {name: "Invoicing",
+
+    {name: "Invoice",
     icon: "bi bi-receipt",
-    link: "/invoicing"},
+    link: "/invoice"},
+
     {name: "Financial Reports",
     icon: "bi bi-bar-chart",
     link: "/financial-reports"},

@@ -41,7 +41,7 @@ function App() {
           <Route path="/income-expenses" element={<IncomeExpense />} />
           <Route path="/transaction-history" element={<TransactionHistory />} />
          <Route path="/invoice" element={<Invoice />} />
-           <Route path="/payroll" element={<Payroll />} />
+           <Route path="/payroll" element={<Payroll />} />                                                                                                                                                                                                                                                                                                                                                                                                                                                              
         </Routes>
       </div>
     </BrowserRouter>
@@ -49,4 +49,5 @@ function App() {
   );
 }
 
-export default App;
+export default App; 
+  

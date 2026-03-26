@@ -1,7 +1,11 @@
-.invoice-container {
-  width: 600px;
-  margin: auto;
-  padding: 20px;
+.invoice-wrapper {
+  background: #f1f5f9;
+  min-height: 100vh;
+  padding: 30px;
+  margin-top: 110px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start; /* ✅ change this */
 }
 
 .invoice-container input {
@@ -23,4 +27,147 @@ button {
   color: white;
   border: none;
   cursor: pointer;
+}
+/* Background */
+.invoice-wrapper {
+  background: #f1f5f9;
+  min-height: 100vh;
+  padding: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Card */
+.invoice-card {
+  background: #ffffff;
+  padding: 25px;
+  width: 800px;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+/* Title */
+.title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #0f172a;
+}
+
+/* Grid Layout */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.grid-1 {
+  margin-bottom: 10px;
+}
+
+/* Inputs */
+input, textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+input:focus, textarea:focus {
+  border-color: #3b82f6;
+  outline: none;
+}
+
+/* Items */
+.section-title {
+  margin-top: 20px;
+}
+
+.item-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.add-btn {
+  background: #e2e8f0;
+  margin-bottom: 15px;
+}
+
+.primary {
+  background: #2563eb;
+  color: white;
+}
+
+.secondary {
+  background: #64748b;
+  color: white;
+}
+
+.success {
+  background: #16a34a;
+  color: white;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+/* Totals */
+.totals {
+  margin-top: 15px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.totals div {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.total {
+  font-size: 18px;
+  font-weight: bold;
+  color: #16a34a;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .invoice-card {
+    width: 100%;
+  }
+
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .item-row {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+    gap: 10px;
+  }
 }

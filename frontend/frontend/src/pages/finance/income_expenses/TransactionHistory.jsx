@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import "./transaction-history.css";
 
 function TransactionHistory() {
@@ -60,9 +62,13 @@ function TransactionHistory() {
   const filteredTransactions = transactions.filter((transaction) => {
     const typeMatch =
       filterType === "all" || transaction.type === filterType;
+
     const searchMatch =
       transaction.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
+      (transaction.description || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
     return typeMatch && searchMatch;
   });
 
@@ -74,6 +80,32 @@ function TransactionHistory() {
     .filter((t) => t.type === "expense")
     .reduce((sum, t) => sum + t.amount, 0);
 
+  // ✅ PDF FUNCTION (only addition)
+  const generatePDF = () => {
+    const doc = new jsPDF();
+
+    doc.text("Transaction Report", 14, 15);
+    doc.text(`Total Income: K${totalIncome.toFixed(2)}`, 14, 25);
+    doc.text(`Total Expense: K${totalExpense.toFixed(2)}`, 14, 32);
+    doc.text(`Net: K${(totalIncome - totalExpense).toFixed(2)}`, 14, 39);
+
+    const tableData = filteredTransactions.map((t) => [
+      new Date(t.date).toLocaleDateString(),
+      t.type.toUpperCase(),
+      t.category,
+      t.description || "-",
+      `K${t.amount.toFixed(2)}`
+    ]);
+
+    autoTable(doc, {
+      startY: 45,
+      head: [["Date", "Type", "Category", "Description", "Amount"]],
+      body: tableData,
+    });
+
+    doc.save("transaction-report.pdf");
+  };
+
   return (
     <div className="transaction-history-container">
       <div className="th-header">
@@ -83,6 +115,11 @@ function TransactionHistory() {
           </button>
           <h1>Transaction History</h1>
         </div>
+
+        {/* ✅ ONLY ADDED BUTTON */}
+        <button onClick={generatePDF}>
+          <i className="bi bi-file-earmark-pdf"></i> Export PDF
+        </button>
       </div>
 
       {loading && (
@@ -133,7 +170,7 @@ function TransactionHistory() {
             </div>
             <div className="summary-item expense">
               <span>Total Expense:</span>
-              <strong>k{totalExpense.toFixed(2)}</strong>
+              <strong>K{totalExpense.toFixed(2)}</strong>
             </div>
             <div className="summary-item balance">
               <span>Net:</span>
@@ -167,7 +204,7 @@ function TransactionHistory() {
                       <td>{transaction.category}</td>
                       <td>{transaction.description || "-"}</td>
                       <td className={`amount ${transaction.type}`}>
-                        {transaction.type === "income" ? "+" : ""}k{transaction.amount.toFixed(2)}
+                        {transaction.type === "income" ? "+" : ""}K{transaction.amount.toFixed(2)}
                       </td>
                       <td>
                         <button
