@@ -1,7 +1,13 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
-import "./style.css";
+
+
 
 function Navbar({ sidebarOpen, setSidebarOpen }) {
+  
+  const handleLogout = () => {
+  localStorage.removeItem("token");
+  window.location.href = "/login";
+};
   return (
     <nav className="navbar">
 
@@ -15,9 +21,6 @@ function Navbar({ sidebarOpen, setSidebarOpen }) {
           <i className="bi bi-chevron-left"></i>
         </div>
 
-        <h2 className="logo">
-          <i className="bi bi-people-fill"></i> HR Dashboard
-        </h2>
       </div>
 
       {/* Right side */}

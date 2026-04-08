@@ -13,25 +13,70 @@ function Signup() {
     nrc: ""
   });
 
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value   
+      [e.target.name]: e.target.value
     });
+
+    // remove error when typing
+    setErrors({
+      ...errors,
+      [e.target.name]: ""
+    });
+  };
+
+  // ✅ VALIDATION FUNCTION
+  const validate = () => {
+    let newErrors = {};
+
+    // Fullname
+    if (!form.fullname.trim()) {
+      newErrors.fullname = "Full name is required";
+    }
+
+    // Email
+    if (!form.email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    // NRC (simple check)
+    if (!form.nrc) {
+      newErrors.nrc = "NRC is required";
+    } else if (form.nrc.length < 6) {
+      newErrors.nrc = "Invalid NRC";
+    }
+
+    // Password
+    if (!form.password) {
+      newErrors.password = "Password is required";
+    } else if (form.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    // Confirm password
+    if (form.password !== form.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    return newErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
+    const validationErrors = validate();
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
 
-    setError("");
     setLoading(true);
 
     try {
@@ -41,7 +86,7 @@ function Signup() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          fullname: form.fullname,  
+          fullname: form.fullname,
           email: form.email,
           password: form.password,
           nrc: form.nrc
@@ -51,15 +96,14 @@ function Signup() {
       const data = await response.text();
 
       if (response.ok) {
-        alert(data);
+        alert("Signup successful!");
         navigate("/login");
       } else {
-        setError(data);
+        setErrors({ general: data });
       }
 
     } catch (err) {
-      console.error(err);
-      setError("Server error. Make sure backend is running.");
+      setErrors({ general: "Server error. Try again." });
     }
 
     setLoading(false);
@@ -70,47 +114,49 @@ function Signup() {
       <form className="signup-form" onSubmit={handleSubmit}>
         <h2>Create Account</h2>
 
-        {error && <p className="error">{error}</p>}
+        {errors.general && <p className="error">{errors.general}</p>}
 
         <input
           type="text"
-          name="fullname"   // ✅ MUST match state
+          name="fullname"
           placeholder="Full Name"
           onChange={handleChange}
-          required
         />
+        {errors.fullname && <p className="error">{errors.fullname}</p>}
 
         <input
           type="email"
           name="email"
           placeholder="Email Address"
           onChange={handleChange}
-          required
         />
+        {errors.email && <p className="error">{errors.email}</p>}
 
         <input
           type="text"
           name="nrc"
           placeholder="National Identity Number"
           onChange={handleChange}
-          required
         />
+        {errors.nrc && <p className="error">{errors.nrc}</p>}
 
         <input
           type="password"
           name="password"
           placeholder="Password"
           onChange={handleChange}
-          required
         />
+        {errors.password && <p className="error">{errors.password}</p>}
 
         <input
           type="password"
           name="confirmPassword"
           placeholder="Confirm Password"
           onChange={handleChange}
-          required
         />
+        {errors.confirmPassword && (
+          <p className="error">{errors.confirmPassword}</p>
+        )}
 
         <button type="submit" disabled={loading}>
           {loading ? "Signing Up..." : "Sign Up"}
@@ -118,10 +164,7 @@ function Signup() {
 
         <p>
           Already have an account?{" "}
-          <span
-            onClick={() => navigate("/login")}
-            style={{ color: "blue", cursor: "pointer" }}
-          >
+          <span onClick={() => navigate("/login")}>
             Login
           </span>
         </p>

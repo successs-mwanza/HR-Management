@@ -1,16 +1,20 @@
 package com.example.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.Model.SignUp;
 import com.example.repository.SignUpRepository;
+import com.example.security.JwtUtil;
+
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:3000")
+
 public class SignupController { 
 
     @Autowired
@@ -36,24 +40,28 @@ public class SignupController {
 
         return "Signup successful!";
     }
+  // api for login  
+@Autowired
+private JwtUtil jwtoken;
 
-//REST API for login
 @PostMapping("/login")
-public String login(@RequestBody SignUp loginData) {
+public ResponseEntity<?> login(@RequestBody SignUp loginData) {
 
-    // ✅ Find user by email
     SignUp user = signUpRepository.findByEmail(loginData.getEmail());
 
     if (user == null) {
-        return "User not found!";
+        return ResponseEntity.status(404).body("User not found");
     }
 
-    // ✅ Check password
     if (passwordEncoder.matches(loginData.getPassword(), user.getPassword())) {
-        return "Login successful";
+
+        //  Generate token
+        String token = jwtoken.generateToken(user.getEmail());
+
+        return ResponseEntity.ok(token);
+
     } else {
-        return "Invalid password";
+        return ResponseEntity.status(401).body("Invalid password");
     }
 }
-
-}
+}  

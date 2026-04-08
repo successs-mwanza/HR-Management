@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./income_expense.css";
+
 
 function IncomeExpense() {
   const navigate = useNavigate();
@@ -156,7 +156,7 @@ function IncomeExpense() {
   return (
     <div className="income-expense-container">
       <div className="ie-header">
-        <h1>Income & Expense Management</h1>
+     
         <button
           className="add-transaction-btn"
           onClick={() => setShowForm(!showForm)}

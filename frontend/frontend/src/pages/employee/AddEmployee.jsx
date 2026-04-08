@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./EmployeeProfile.css";
+import "../../App.css";
 
 function AddEmployee() {
   const navigate = useNavigate();

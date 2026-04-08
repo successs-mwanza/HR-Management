@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../payroll/payroll.css";
+
 
 function Payroll() {
   const [basicSalary, setBasicSalary] = useState(0);
@@ -78,5 +78,11 @@ function Payroll() {
     </div>
   );
 }
+
+
+
+
+
+
 
 export default Payroll;

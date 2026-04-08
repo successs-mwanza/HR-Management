@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import "./sidebar.css";
+
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
@@ -14,7 +14,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       name: "Employees",
       icon: "bi bi-people",
       children: [
-      { name: "Employee Profile", icon:"bi bi-person", link: "/" },
+      { name: "Employee", icon:"bi bi-person", link: "/employeeprofile" },
       
          { name: "Attendance", icon:"bi-calendar-check", link: "/attendance" },
        
@@ -45,6 +45,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     {name: "Invoice",
     icon: "bi bi-receipt",
     link: "/invoice"},
+    {
+      name:"payslip",
+      icon: "bi bi-file-earmark-text",
+      link: "/payslip"
+    },
 
     {name: "Financial Reports",
     icon: "bi bi-bar-chart",

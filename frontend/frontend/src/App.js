@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useState } from "react";
 import "./App.css";
 import Navbar from "./dashboard/Navbar/Navigationbar";
@@ -14,40 +14,65 @@ import Crm from "./landingPage/Crm";
 import Signup from "./Login_Signup/signup";
 import Login from "./Login_Signup/login";
 import Invoice from "./pages/finance/invoice/invoice";
+import DashboardCRM from "./MainDashboard/dashboardCRM";
+import Payslip from "./pages/finance/payroll/payslip";
 
-
-
-function App() {
+function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
+
+  // pages where navbar/sidebar should NOT appear
+  const hideLayout =
+    location.pathname === "/" ||
+    location.pathname === "/login" ||
+    location.pathname === "/signup";
 
   return (
-    <BrowserRouter>
-      <div className="app-container">
-        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      
-        <Routes>
-         
-         <Route path="/" element={<Crm/>}/>
-          <Route path="/login" element={<Login/>} />
-          <Route path="/signup" element={<Signup/>} />
+    <div className="app-container">
+      {/* Hide sidebar/navbar on landing/login/signup */}
+      {!hideLayout && (
+        <>
+          <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        </>
+      )}
+
+      {/* Content wrapper - THIS IS THE KEY FIX */}
+      <div className={!hideLayout ? "content-wrapper" : ""}>
+        <div className={!hideLayout ? "page-container" : ""}>
+          <Routes>
+            {/* Public Pages */}
+            <Route path="/" element={<Crm />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+
+            <Route path="/dashboard" element={<DashboardCRM />} />
+            
             {/* Employee Routes */}
-          <Route path="/" element={<EmployeesList />} />
-          <Route path="/employee-profile/:id" element={<EmployeeProfile />} />
-          <Route path="/add-employee" element={<AddEmployee />} />
-          <Route path="/edit-employee/:id" element={<EditEmployee />} />
+            <Route path="/employees" element={<EmployeesList />} />
+            <Route path="/employee" element={<EmployeeProfile />} />
+            <Route path="/add-employee" element={<AddEmployee />} />
+            <Route path="/edit-employee/:id" element={<EditEmployee />} />
 
             {/* Finance Routes */}
-          <Route path="/income-expenses" element={<IncomeExpense />} />
-          <Route path="/transaction-history" element={<TransactionHistory />} />
-         <Route path="/invoice" element={<Invoice />} />
-           <Route path="/payroll" element={<Payroll />} />                                                                                                                                                                                                                                                                                                                                                                                                                                                              
-        </Routes>
+            <Route path="/income-expenses" element={<IncomeExpense />} />
+            <Route path="/transaction-history" element={<TransactionHistory />} />
+            <Route path="/invoice" element={<Invoice />} />
+            <Route path="/payroll" element={<Payroll />} />
+            <Route path="/payslip" element={<Payslip />} />
+          </Routes>
+        </div>
       </div>
-    </BrowserRouter>
-    
+    </div>
   );
 }
 
-export default App; 
-  
+function App() {
+  return (
+    <BrowserRouter>
+      <Layout />
+    </BrowserRouter>
+  );
+}
+
+export default App;

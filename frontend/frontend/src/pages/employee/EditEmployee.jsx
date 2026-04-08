@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import "./EmployeeProfile.css";
+
 
 function EditEmployee() {
   const { id } = useParams();

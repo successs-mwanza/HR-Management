@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./login.css";
 
@@ -7,11 +7,19 @@ function Login() {
 
   const [form, setForm] = useState({
     email: "",
-    password: "",
+    password: ""
   });
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // 🔐 Auto redirect if already logged in
+  // useEffect(() => {
+  //   const token = localStorage.getItem("token");
+  //   if (token) {
+  //     navigate("/dashboard");
+  //   }
+  // }, [navigate]);
 
   const handleChange = (e) => {
     setForm({
@@ -22,11 +30,6 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!form.email || !form.password) {
-      setError("All fields are required");
-      return;
-    }
 
     setError("");
     setLoading(true);
@@ -40,23 +43,21 @@ function Login() {
         body: JSON.stringify(form)
       });
 
-      const data = await response.text();
+      if (response.ok) {
+        const token = await response.text();
 
-      if (response.ok && data === "Login successful") {
-        alert(data);
+        // ✅ Save token
+        localStorage.setItem("token", token);
 
-        // ✅ Save user session
-        localStorage.setItem("userEmail", form.email);
+        // ✅ Redirect
+        navigate("/dashboard");
 
-        // ✅ Redirect to dashboard
-        navigate("/employeelist");
       } else {
-        setError(data);
+        const err = await response.text();
+        setError(err);
       }
-                                                 
-    } 
-    catch (err) {
-      console.error(err);
+
+    } catch (err) {
       setError("Server error. Try again.");
     }
 
@@ -73,8 +74,7 @@ function Login() {
         <input
           type="email"
           name="email"
-          placeholder="Email Address"
-          value={form.email}
+          placeholder="Email"
           onChange={handleChange}
           required
         />
@@ -83,7 +83,6 @@ function Login() {
           type="password"
           name="password"
           placeholder="Password"
-          value={form.password}
           onChange={handleChange}
           required
         />
@@ -94,10 +93,7 @@ function Login() {
 
         <p>
           Don't have an account?{" "}
-          <span
-            onClick={() => navigate("/signup")}
-            style={{ color: "blue", cursor: "pointer" }}
-          >
+          <span onClick={() => navigate("/signup")}>
             Sign Up
           </span>
         </p>
@@ -106,4 +102,4 @@ function Login() {
   );
 }
 
-export default Login;                         
+export default Login;

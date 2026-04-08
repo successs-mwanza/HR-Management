@@ -1,9 +1,8 @@
 // File: src/components/Invoice.js
 import { useState } from "react";
-import "../invoice/invoice.css";
+
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-
 function Invoice() {
   const [invoice, setInvoice] = useState({
     invoiceNumber: "",

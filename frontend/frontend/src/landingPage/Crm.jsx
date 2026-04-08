@@ -1,4 +1,4 @@
-import "../landingPage/crm.css";
+
 import { useNavigate } from "react-router-dom";
 
 function Crm() {
@@ -9,7 +9,7 @@ function Crm() {
       <h1>Human Resource Management System</h1>
       <p>
         Manage employees, payroll, and finances in one powerful system.
-      </p>
+      </p>    
 
       {/* Buttons */}
       <div className="crm-buttons">
