@@ -44,19 +44,39 @@
   height: 100vh;
   background-color: #f4f6f9;
   font-family: Arial, Helvetica, sans-serif;
-  overflow: auto;
+  overflow: hidden; /* Prevents double scrollbars */
 }
 
-/* Content wrapper - THIS IS THE KEY FIX */
+/* Content wrapper - scrollable area */
 .content-wrapper {
   margin-left: 250px;
-  margin-top: 60px;
+  margin-top: 60px; /* Space for fixed navbar */
   padding: 30px;
-  min-height: calc(100vh - 60px);
+  height: calc(100vh - 60px); /* Full height minus navbar */
   width: calc(100% - 250px);
+  overflow-y: auto; /* Enables scrolling */
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+/* Custom scrollbar styling (optional) */
+.content-wrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.content-wrapper::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 /* Container for all page content */
@@ -227,6 +247,7 @@
     margin-left: 0;
     width: 100%;
     padding: 15px;
+    height: calc(100vh - 60px);
   }
 
   .table-container {
@@ -241,7 +262,7 @@
   }
 }
 
-/* Sidebar *****************************************/
+/************Sidebar *****************************************/
 .sidebar {
   width: 250px;
   height: 100vh;
@@ -254,6 +275,7 @@
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
   z-index: 101;
   transform: translateX(0);
+  overflow-y: auto; /* Makes sidebar scrollable if content overflows */
 }
 
 .sidebar.mobile-open {
@@ -401,7 +423,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 25px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(215, 210, 210, 0.1);
   z-index: 100;
 }
 
@@ -476,7 +498,7 @@
 .crm-container {
   margin-top: 0;
   padding: 40px;
-  min-height: 100vh;
+  min-height: auto;
   background: linear-gradient(135deg, #0f172a, #1e293b);
   color: white;
   display: flex;
@@ -798,8 +820,8 @@
   margin-top: 0;
   padding: 30px;
   background-color: #f4f6f9;
-  height: calc(100vh - 80px);
-  overflow-y: auto;
+  height: auto;
+  overflow-y: visible;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -958,7 +980,7 @@
 .form-group input,
 .form-group select {
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #dddddd;
   border-radius: 5px;
   font-size: 14px;
   font-family: inherit;
@@ -1078,8 +1100,8 @@
   margin: 0 auto;
   padding: 20px;
   background-color: #f4f6f9;
-  height: calc(100vh - 80px);
-  overflow-y: auto;
+  height: auto;
+  overflow-y: visible;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1326,7 +1348,7 @@
 /* Invoice */
 .invoice-wrapper {
   background: #f1f5f9;
-  min-height: 100vh;
+  min-height: auto;
   padding: 30px;
   display: flex;
   justify-content: center;
@@ -1490,11 +1512,12 @@ textarea:focus {
 }
 
 /*********************** Payroll **************************************************/
+/*********************** Payroll **************************************************/
 .payroll-container {
   margin-top: 0;
   padding: 30px;
   background: #f4f6f9;
-  min-height: 100vh;
+  min-height: auto;
   width: 100%;
 }
 
@@ -1519,6 +1542,10 @@ textarea:focus {
   cursor: pointer;
 }
 
+.process-btn:hover {
+  background: #0056b3;
+}
+
 /* Form */
 .payroll-form {
   display: grid;
@@ -1538,13 +1565,39 @@ textarea:focus {
 .form-group label {
   font-weight: 600;
   margin-bottom: 6px;
+  color: #333;
 }
 
+/* FIXED: INPUT + SELECT styles - Now readable */
 .form-group input,
 .form-group select {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #ccc;
   border-radius: 6px;
+  background-color: #ffffff;  /* White background */
+  color: #333333;              /* Dark text */
+  font-size: 14px;
+}
+
+/* FIXED: Dropdown options now visible */
+.form-group select option {
+  background-color: #ffffff;   /* White background */
+  color: #333333;              /* Dark text */
+  padding: 10px;
+}
+
+/* Selected option style */
+.form-group select option:checked {
+  background-color: #007bff;
+  color: white;
+}
+
+/* Focus state */
+.form-group select:focus,
+.form-group input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
 }
 
 /* Summary Cards */
@@ -1574,12 +1627,15 @@ textarea:focus {
 .income {
   border-left: 5px solid #28a745;
 }
+
 .allowance {
   border-left: 5px solid #17a2b8;
 }
+
 .deduction {
   border-left: 5px solid #dc3545;
 }
+
 .net {
   border-left: 5px solid #007bff;
 }
@@ -1591,7 +1647,7 @@ textarea:focus {
   padding: 20px;
 }
 
-input {
+.payslip-container input {
   display: block;
   width: 100%;
   margin-bottom: 10px;
@@ -1600,13 +1656,31 @@ input {
 
 .summary {
   background: #f4f4f4;
-  padding: 15px;
+  padding: 15px;  
   margin-top: 15px;
   border-radius: 8px;
 }
 
-button {
+.payslip-container button {
   margin-top: 15px;
   padding: 10px;
   cursor: pointer;
+}
+.button-container {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.process-btn {
+  padding: 10px 24px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #4CAF50;
+  color: white;
+  margin-left: 20px;
+  border: none;
+  border-radius: 4px;
+  transition: background-color 0.3s;
 }

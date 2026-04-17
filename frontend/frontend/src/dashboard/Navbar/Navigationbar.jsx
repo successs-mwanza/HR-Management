@@ -26,7 +26,7 @@ function Navbar({ sidebarOpen, setSidebarOpen }) {
       {/* Right side */}
       <div className="nav-right">
 
-        <i className="bi bi-search"></i>
+  
 
         <i className="bi bi-bell"></i>
 

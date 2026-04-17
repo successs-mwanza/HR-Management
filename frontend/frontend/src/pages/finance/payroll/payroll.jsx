@@ -1,88 +1,185 @@
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 
 function Payroll() {
   const [basicSalary, setBasicSalary] = useState(0);
   const [allowances, setAllowances] = useState(0);
   const [deductions, setDeductions] = useState(0);
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [loading, setLoading] = useState(true); // ✅ added
 
-  const netSalary = basicSalary + allowances - deductions;
+  const netSalary =
+    (basicSalary || 0) + (allowances || 0) - (deductions || 0);
+
+  // ✅ Fetch employees with loading state
+  useEffect(() => {
+    fetch("http://localhost:8080/api/employees")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Employees:", data); // debug
+        setEmployees(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
+
+  // Handle employee selection
+  const handleEmployeeChange = (e) => {
+    const empId = Number(e.target.value);
+    const emp = employees.find((emp) => emp.id === empId);
+    setSelectedEmployee(emp);
+  };
+
+  // Process salary
+  const handleProcessSalary = () => {
+    if (!selectedEmployee) {
+      alert("Please select an employee");
+      return;
+    }
+
+    const payload = {
+      employeeId: selectedEmployee.id,
+      basicSalary,
+      allowances,
+      deductions,
+      netSalary,
+    };
+
+    fetch("http://localhost:8080/api/payroll", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => res.json())
+      .then(() => alert("Salary processed successfully!"))
+      .catch((err) => console.error(err));
+  };
+
+  // Generate payslip
+  const handleGeneratePayslip = () => {
+    if (!selectedEmployee) {
+      alert("Select employee first");
+      return;
+    }
+
+    alert(`
+Employee: ${selectedEmployee.name}
+Basic Salary: K ${basicSalary}
+Allowances: K ${allowances}
+Deductions: K ${deductions}
+Net Salary: K ${netSalary}
+    `);
+  };
 
   return (
     <div className="payroll-container">
-      
-      {/* Header */}
+      {/* HEADER */}
       <div className="payroll-header">
         <h1>Payroll Management</h1>
-        <button className="process-btn">Process Salary</button>
       </div>
 
-      {/* Form Section */}
+      {/* FORM */}
       <div className="payroll-form">
-
         <div className="form-group">
           <label>Employee</label>
-          <select>
-            <option>Select Employee</option>
+          <select
+            value={selectedEmployee?.id || ""}
+            onChange={handleEmployeeChange}
+          >
+            {/* ✅ Loading state */}
+            {loading ? (
+              <option>Loading employees...</option>
+            ) : employees.length === 0 ? (
+              <option>No employees found</option>
+            ) : (
+              <>
+                <option value="">Select Employee</option>
+                {employees.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.firstName} {emp.middleName} {emp.lastName}
+                  </option>
+                ))}
+              </>
+            )}
           </select>
         </div>
 
         <div className="form-group">
           <label>Basic Salary</label>
-          <input 
-            type="number" 
+          <input
+            type="number"
+            value={basicSalary}
             onChange={(e) => setBasicSalary(Number(e.target.value))}
           />
         </div>
 
         <div className="form-group">
           <label>Allowances</label>
-          <input 
-            type="number" 
+          <input
+            type="number"
+            value={allowances}
             onChange={(e) => setAllowances(Number(e.target.value))}
           />
         </div>
 
         <div className="form-group">
           <label>Deductions</label>
-          <input 
-            type="number" 
+          <input
+            type="number"
+            value={deductions}
             onChange={(e) => setDeductions(Number(e.target.value))}
           />
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* SUMMARY */}
       <div className="payroll-summary">
         <div className="card income">
           <span>Basic Salary</span>
-          <h2>{basicSalary}</h2>
+          <h2>K {basicSalary.toLocaleString()}</h2>
         </div>
 
         <div className="card allowance">
           <span>Allowances</span>
-          <h2>{allowances}</h2>
+          <h2>K {allowances.toLocaleString()}</h2>
         </div>
 
         <div className="card deduction">
           <span>Deductions</span>
-          <h2>{deductions}</h2>
+          <h2>K {deductions.toLocaleString()}</h2>
         </div>
 
         <div className="card net">
           <span>Net Salary</span>
-          <h2>{netSalary}</h2>
+          <h2>K {netSalary.toLocaleString()}</h2>
         </div>
       </div>
 
+      {/* BUTTONS - Updated with new styling */}
+      <div className="button-container">
+        <button
+          className="process-btn"
+          onClick={handleProcessSalary}
+          disabled={!selectedEmployee}
+        >
+          Process Salary
+        </button>
+
+        <button
+          className="process-btn"
+          onClick={handleGeneratePayslip}
+          disabled={!selectedEmployee}
+        >
+          Generate Payslip
+        </button>
+      </div>
     </div>
   );
 }
-
-
-
-
-
-
 
 export default Payroll;

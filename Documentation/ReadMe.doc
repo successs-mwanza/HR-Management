@@ -1,0 +1,87 @@
+import { useState, useEffect } from "react";
+
+function EmployeeList() {
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/employees")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch employees");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Employees Data:", data);
+
+        // handle different backend formats
+        const list = Array.isArray(data)
+          ? data
+          : data.data || data.content || [];
+
+        setEmployees(list);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div>Loading employees...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h2>Employee List</h2>
+
+      {/* Total count card */}
+      <div
+        style={{
+          background: "#4CAF50",
+          color: "white",
+          padding: "20px",
+          borderRadius: "10px",
+          width: "200px",
+          marginBottom: "20px",
+          textAlign: "center"
+        }}
+      >
+        <h3>Total Employees</h3>
+        <h1>{employees.length}</h1>
+      </div>
+
+      {/* Employee table */}
+      <table border="1" cellPadding="10" style={{ width: "100%" }}>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>First Name</th>
+            <th>Middle Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Department</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {employees.map((emp) => (
+            <tr key={emp.id}>
+              <td>{emp.id}</td>
+              <td>{emp.firstName}</td>
+              <td>{emp.middleName || "N/A"}</td>
+              <td>{emp.lastName}</td>
+              <td>{emp.email || "N/A"}</td>
+              <td>{emp.department || "N/A"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+export default EmployeeList;

@@ -3,10 +3,10 @@ import { useState } from "react";
 import "./App.css";
 import Navbar from "./dashboard/Navbar/Navigationbar";
 import Sidebar from "./dashboard/Sidebar/AppSidebar";
-import EmployeesList from "./pages/employee/EmployeesList";
-import EmployeeProfile from "./pages/employee/EmployeeProfile";
-import AddEmployee from "./pages/employee/AddEmployee";
-import EditEmployee from "./pages/employee/EditEmployee";
+
+
+// import AddEmployee from "./pages/employee/AddEmployee";                      
+// import EditEmployee from "./pages/employee/EditEmployee";
 import IncomeExpense from "./pages/finance/income_expenses/incom_expense";
 import TransactionHistory from "./pages/finance/income_expenses/TransactionHistory";
 import Payroll from "./pages/finance/payroll/payroll";
@@ -16,6 +16,7 @@ import Login from "./Login_Signup/login";
 import Invoice from "./pages/finance/invoice/invoice";
 import DashboardCRM from "./MainDashboard/dashboardCRM";
 import Payslip from "./pages/finance/payroll/payslip";
+import EmployeeIndex from "./pages/employee/EmployeeIndex";
 
 function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -37,7 +38,7 @@ function Layout() {
         </>
       )}
 
-      {/* Content wrapper - THIS IS THE KEY FIX */}
+      {/* Cont */}
       <div className={!hideLayout ? "content-wrapper" : ""}>
         <div className={!hideLayout ? "page-container" : ""}>
           <Routes>
@@ -45,14 +46,14 @@ function Layout() {
             <Route path="/" element={<Crm />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-
+                <Route path="/employees" element={<EmployeeIndex />} /> 
             <Route path="/dashboard" element={<DashboardCRM />} />
             
-            {/* Employee Routes */}
-            <Route path="/employees" element={<EmployeesList />} />
-            <Route path="/employee" element={<EmployeeProfile />} />
-            <Route path="/add-employee" element={<AddEmployee />} />
-            <Route path="/edit-employee/:id" element={<EditEmployee />} />
+        
+
+         
+            {/* <Route path="/addemployee" element={<AddEmployee />} /> */}
+            
 
             {/* Finance Routes */}
             <Route path="/income-expenses" element={<IncomeExpense />} />

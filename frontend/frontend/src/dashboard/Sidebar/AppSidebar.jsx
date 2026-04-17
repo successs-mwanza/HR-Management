@@ -8,19 +8,27 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
 
   const [openIndex, setOpenIndex] = useState(null);
 
-// employee menu with submenus
   const menu = [
+
+   // main Home dashboard item
+    {name:"Main Dashboard",
+    icon: "bi bi-speedometer2",
+    link: "/crm"},
+
+    
+// employee menu with submenus
     {
       name: "Employees",
       icon: "bi bi-people",
       children: [
-      { name: "Employee", icon:"bi bi-person", link: "/employeeprofile" },
+      { name: "Employee", icon:"bi bi-person", link: "/Employees" },
       
          { name: "Attendance", icon:"bi-calendar-check", link: "/attendance" },
        
       ]
       
     },
+ 
     //Tasks item
     {
       name: "Tasks",
@@ -105,9 +113,12 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
             <div
               className="sidebar-parent d-flex align-items-center justify-content-between"
               onClick={() => {
-                toggleMenu(index);
-                if (!item.children && item.link) {
+                if (item.link) {
+                  // If it's a link item, just navigate and close sidebar
                   setSidebarOpen(false);
+                } else if (item.children) {
+                  // If it has children, toggle the dropdown
+                  toggleMenu(index);
                 }
               }}
             >
@@ -116,17 +127,20 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
                 {item.name}
               </span>
 
-              <i
-                className={`bi ${
-                  openIndex === index ? "bi-chevron-up" : "bi-chevron-down"
-                }`}
-              ></i>
+              {/* Only show dropdown arrow if item has children */}
+              {item.children && (
+                <i
+                  className={`bi ${
+                    openIndex === index ? "bi-chevron-up" : "bi-chevron-down"
+                  }`}
+                ></i>
+              )}
             </div>
 
             {/* Submenu */}
-            {openIndex === index && (
+            {openIndex === index && item.children && (
               <ul className="submenu">
-                {item.children && item.children.map((child, i) => (
+                {item.children.map((child, i) => (
                   <li key={i}>
                     <Link to={child.link} onClick={() => setSidebarOpen(false)}>
                       <i className={`${child.icon} me-2`}></i>
