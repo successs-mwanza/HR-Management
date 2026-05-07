@@ -18,10 +18,10 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     
 // employee menu with submenus
     {
-      name: "Employees",
+      name: "Employee Management",
       icon: "bi bi-people",
       children: [
-      { name: "Employee", icon:"bi bi-person", link: "/Employees" },
+      { name: "Employee", icon:"bi bi-person", link: "/employees" },
       
          { name: "Attendance", icon:"bi-calendar-check", link: "/attendance" },
        
@@ -31,12 +31,12 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
  
     //Tasks item
     {
-      name: "Tasks",
+      name: "Tasks Management",
       icon: "bi bi-list-check"
     },
     //Finance item
     {
-      name: "Finance",
+      name: "Financial Management",
       icon: "bi bi-cash-coin",
       children: [
         {
@@ -59,26 +59,23 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       link: "/payslip"
     },
 
-    {name: "Financial Reports",
-    icon: "bi bi-bar-chart",
-    link: "/financial-reports"},
     {name:"income & Expenses",
     icon: "bi bi-graph-up",
     link: "/income-expenses"}
       ]
     },
-    //Checklist item
+
+    //Reports & Analytics item
     {
-      name: "Checklist",
-      icon: "bi bi-gear",
-      link: "/settings"
-    },
-    //Reports item
-    {
-      name: "Reports",  
-      icon: "bi bi-bar-chart",
-      link: "/reports"
-    }
+    name: "Reports & Analytics",
+    icon: "bi bi-graph-up",
+    children: [
+      { name: "Sales Reports", icon: "bi bi-bar-chart", link: "/sales-reports" },
+      { name: "Performance Analytics", icon: "bi bi-pie-chart", link: "/performance-analytics" }, 
+      { name: "Employee Reports", icon: "bi bi-people", link: "/employee-reports" },
+      { name: "Financial Reports", icon: "bi bi-cash-coin", link: "/financial-reports" },
+    ]
+  },
 
   ];
   const toggleMenu = (index) => {

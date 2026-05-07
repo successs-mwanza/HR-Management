@@ -16,7 +16,10 @@ import Login from "./Login_Signup/login";
 import Invoice from "./pages/finance/invoice/invoice";
 import DashboardCRM from "./MainDashboard/dashboardCRM";
 import Payslip from "./pages/finance/payroll/payslip";
-import EmployeeIndex from "./pages/employee/EmployeeIndex";
+
+
+import Employees from "./pages/employee/Employees";
+// import EmployeeReports from "./pages/reports & analytics/Employee Reports";
 
 function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -34,7 +37,7 @@ function Layout() {
       {!hideLayout && (
         <>
           <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-          <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+          <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />dddddd
         </>
       )}
 
@@ -46,7 +49,7 @@ function Layout() {
             <Route path="/" element={<Crm />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-                <Route path="/employees" element={<EmployeeIndex />} /> 
+                <Route path="/employees" element={<Employees />} /> 
             <Route path="/dashboard" element={<DashboardCRM />} />
             
         
@@ -61,6 +64,10 @@ function Layout() {
             <Route path="/invoice" element={<Invoice />} />
             <Route path="/payroll" element={<Payroll />} />
             <Route path="/payslip" element={<Payslip />} />
+
+             {/* Reports and Analytics Routes */}
+               {/* <Route path="/employee-reports" element={<EmployeeReports />} />  */}
+
           </Routes>
         </div>
       </div>
@@ -76,4 +83,4 @@ function App() {
   );
 }
 
-export default App;
+export default App;   

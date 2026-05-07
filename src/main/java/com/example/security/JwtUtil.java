@@ -15,15 +15,15 @@ public class JwtUtil {
     private Key getKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
     }
-
     public String generateToken(String email) {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1 hour
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
                 .signWith(getKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
 
     public String extractEmail(String token) {
         return Jwts.parserBuilder()
