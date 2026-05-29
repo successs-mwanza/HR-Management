@@ -1,144 +1,189 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-function Employees() {
+
+function EmployeeIndex() {
   const [employees, setEmployees] = useState([]);
+  const [search, setSearch] = useState("");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({
-    department: "",
-    status: "",
-    dateRange: "all",
-  });
-  const menuWrapperRef = useRef(null);
 
-  // Modal states
-  const [showMenuFor, setShowMenuFor] = useState(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [editFormData, setEditFormData] = useState({
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+
+  // Notification state
+  const [notification, setNotification] = useState({ show: false, message: "", type: "" });
+
+  // Modal and form states
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [formData, setFormData] = useState({
     firstName: "",
+    middleName: "",
     lastName: "",
-    email: "",
     department: "",
     position: "",
-    status: "",
+    email: "",
+    phone: "",
   });
 
-  // Statistics state
-  const [statistics, setStatistics] = useState({
-    totalEmployees: 0,
-    activeEmployees: 0,
-    inactiveEmployees: 0,
-    departmentCount: {},
-    positionCount: {},
+  // Delete confirmation state
+  const [deleteConfirm, setDeleteConfirm] = useState({ show: false, id: null });
+
+  // Edit states
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    id: null,
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    department: "",
+    position: "",
+    email: "",
+    phone: "",
+    status: ""
   });
+
+  // Actions Modal state
+  const [showActionsModal, setShowActionsModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+  // View Profile Modal state
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewEmployee, setViewEmployee] = useState(null);
 
   useEffect(() => {
-    fetchEmployees();
+    fetch("http://localhost:8081/api/employees")
+      .then((res) => res.json())
+      .then((data) => {
+        const list = Array.isArray(data)
+          ? data
+          : data.data || data.content || [];
+
+        setEmployees(list);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
   }, []);
 
-  const fetchEmployees = async () => {
+  // Auto-hide notification after 2 seconds
+  useEffect(() => {
+    if (notification.show) {
+      const timer = setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  const handleDelete = async () => {
+    const id = deleteConfirm.id;
     try {
-      setLoading(true);
-      const response = await fetch("http://localhost:8080/api/employees");
-      if (!response.ok) throw new Error("Failed to fetch employees");
-      const data = await response.json();
-      setEmployees(data);
-      calculateStatistics(data);
+      await fetch(`http://localhost:8081/api/employees/${id}`, {
+        method: "DELETE",
+      });
+
+      setEmployees(employees.filter((e) => e.id !== id));
+      setDeleteConfirm({ show: false, id: null });
+      setNotification({
+        show: true,
+        message: "Employee deleted successfully!",
+        type: "success"
+      });
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setDeleteConfirm({ show: false, id: null });
+      setNotification({
+        show: true,
+        message: "Error deleting employee: " + err.message,
+        type: "danger"
+      });
     }
   };
 
-  const calculateStatistics = (data) => {
-    const stats = {
-      totalEmployees: data.length,
-      activeEmployees: data.filter((emp) => emp.status === "Active").length,
-      inactiveEmployees: data.filter((emp) => emp.status !== "Active").length,
-      departmentCount: {},
-      positionCount: {},
-    };
-
-    data.forEach((emp) => {
-      stats.departmentCount[emp.department] =
-        (stats.departmentCount[emp.department] || 0) + 1;
-      stats.positionCount[emp.position] =
-        (stats.positionCount[emp.position] || 0) + 1;
-    });
-
-    setStatistics(stats);
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const getFilteredEmployees = () => {
-    return employees.filter((emp) => {
-      if (filters.department && emp.department !== filters.department)
-        return false;
-      if (filters.status && emp.status !== filters.status) return false;
-      return true;
-    });
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const filteredEmployees = getFilteredEmployees();
+  const handleAddEmployee = async () => {
+    if (!formData.firstName || !formData.lastName) {
+      setNotification({
+        show: true,
+        message: "Please fill in First Name and Last Name",
+        type: "warning"
+      });
+      return;
+    }
 
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (
-        menuWrapperRef.current &&
-        !menuWrapperRef.current.contains(event.target)
-      ) {
-        setShowMenuFor(null);
-      }
-    };
-
-    document.addEventListener("click", handleOutsideClick);
-    return () => {
-      document.removeEventListener("click", handleOutsideClick);
-    };
-  }, []);
-
-  // Handle menu toggle
-  const toggleMenu = (employeeId) => {
-    setShowMenuFor(showMenuFor === employeeId ? null : employeeId);
-  };
-
-  // Handle View Profile
-  const handleViewProfile = (employee) => {
-    setSelectedEmployee(employee);
-    setShowViewModal(true);
-    setShowMenuFor(null);
-  };
-
-  // Handle Edit
-  const handleEdit = (employee) => {
-    setSelectedEmployee(employee);
-    setEditFormData({
-      firstName: employee.firstName,
-      lastName: employee.lastName,
-      email: employee.email,
-      department: employee.department,
-      position: employee.position,
-      status: employee.status,
-    });
-    setShowEditModal(true);
-    setShowMenuFor(null);
-  };
-
-  // Handle Delete
-  const handleDelete = (employee) => {
-    setSelectedEmployee(employee);
-    setShowDeleteModal(true);
-    setShowMenuFor(null);
-  };
-
-  // Save Edit
-  const handleSaveEdit = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/api/employees/${selectedEmployee.id}`, {
+      const response = await fetch("http://localhost:8081/api/employees", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        const newEmployee = await response.json();
+        setEmployees([...employees, newEmployee]);
+        setShowAddModal(false);
+        setFormData({
+          firstName: "",
+          middleName: "",
+          lastName: "",
+          department: "",
+          position: "",
+          email: "",
+          phone: "",
+        });
+        setNotification({
+          show: true,
+          message: "Employee added successfully!",
+          type: "success"
+        });
+      } else {
+        setNotification({
+          show: true,
+          message: "Failed to add employee",
+          type: "danger"
+        });
+      }
+    } catch (err) {
+      setNotification({
+        show: true,
+        message: "Error adding employee: " + err.message,
+        type: "danger"
+      });
+    }
+  };
+
+  const handleEditEmployee = async () => {
+    if (!editFormData.firstName || !editFormData.lastName) {
+      setNotification({
+        show: true,
+        message: "Please fill in First Name and Last Name",
+        type: "warning"
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:8081/api/employees/${editFormData.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -146,471 +191,879 @@ function Employees() {
         body: JSON.stringify(editFormData),
       });
 
-      if (!response.ok) throw new Error("Failed to update employee");
-
-      // Refresh employee list
-      await fetchEmployees();
-      setShowEditModal(false);
-      setSelectedEmployee(null);
+      if (response.ok) {
+        const updatedEmployee = await response.json();
+        setEmployees(employees.map(emp => 
+          emp.id === updatedEmployee.id ? updatedEmployee : emp
+        ));
+        setShowEditModal(false);
+        setNotification({
+          show: true,
+          message: "Employee updated successfully!",
+          type: "success"
+        });
+      } else {
+        setNotification({
+          show: true,
+          message: "Failed to update employee",
+          type: "danger"
+        });
+      }
     } catch (err) {
-      alert("Error updating employee: " + err.message);
-    }
-  };
-
-  // Confirm Delete
-  const confirmDelete = async () => {
-    try {
-      const response = await fetch(`http://localhost:8080/api/employees/${selectedEmployee.id}`, {
-        method: "DELETE",
+      setNotification({
+        show: true,
+        message: "Error updating employee: " + err.message,
+        type: "danger"
       });
-
-      if (!response.ok) throw new Error("Failed to delete employee");
-
-      // Refresh employee list
-      await fetchEmployees();
-      setShowDeleteModal(false);
-      setSelectedEmployee(null);
-    } catch (err) {
-      alert("Error deleting employee: " + err.message);
     }
   };
 
-  // Export Report
-  const handleExport = () => {
-    const reportData = filteredEmployees.map(emp => ({
-      Name: `${emp.firstName} ${emp.lastName}`,
-      Email: emp.email,
-      Department: emp.department,
-      Position: emp.position,
-      Status: emp.status
-    }));
-
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + Object.keys(reportData[0] || {}).join(",") + "\n"
-      + reportData.map(row => Object.values(row).join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "employee_report.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const openEditModal = (employee) => {
+    setSelectedEmployee(null);
+    setEditFormData({
+      id: employee.id,
+      firstName: employee.firstName || "",
+      middleName: employee.middleName || "",
+      lastName: employee.lastName || "",
+      department: employee.department || "",
+      position: employee.position || "",
+      email: employee.email || "",
+      phone: employee.phone || "",
+      status: employee.status || "Active"
+    });
+    setShowEditModal(true);
+    setShowActionsModal(false);
   };
 
-  if (loading) {
-    return (
-      <div className="reports-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading Employee Reports...</p>
-        </div>
-      </div>
-    );
-  }
+  const openDeleteConfirm = (employee) => {
+    setSelectedEmployee(null);
+    setDeleteConfirm({ show: true, id: employee.id });
+    setShowActionsModal(false);
+  };
+
+  const openActionsModal = (employee) => {
+    setSelectedEmployee(employee);
+    setShowActionsModal(true);
+  };
+
+  const openViewModal = (employee) => {
+    setViewEmployee(employee);
+    setShowViewModal(true);
+    setShowActionsModal(false);
+  };
+
+  // FILTER
+  const filtered = employees.filter((emp) =>
+    `${emp.firstName} ${emp.lastName}`
+      .toLowerCase()
+      .includes(search.toLowerCase())
+  );
+
+  // PAGINATION
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const start = (currentPage - 1) * pageSize;
+  const paginated = filtered.slice(start, start + pageSize);
+
+  if (loading) return <div className="text-center mt-5">Loading...</div>;
+  if (error) return <div className="text-danger text-center">{error}</div>;
+  
+  const activeCount = employees.filter(e => e.status === "Active" || !e.status).length;
+  const inactiveCount = employees.filter(e => e.status === "Inactive").length;
+
+  // Monthly recruitment (based on hireDate)
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+
+  const monthlyRecruitment = employees.filter((e) => {
+    if (!e.hireDate) return false;
+    const date = new Date(e.hireDate);
+    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+  }).length;
+
+  // Modal overlay style (shared for all modals)
+  const modalOverlayStyle = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1050
+  };
+
+  // Larger modal dialog styles
+  const modalDialogStyleLarge = {
+    margin: 0,
+    width: "100%",
+    maxWidth: "700px" // Larger for forms
+  };
+
+  const modalDialogStyleMedium = {
+    margin: 0,
+    width: "100%",
+    maxWidth: "500px" // For view profile
+  };
+
+  const modalDialogStyleSmall = {
+    margin: 0,
+    width: "100%",
+    maxWidth: "400px" // For actions/delete
+  };
+
+  const modalContentStyle = {
+    backgroundColor: "#ffffff",
+    border: "none",
+    borderRadius: "1rem",
+    boxShadow: "0 20px 60px rgba(15, 23, 42, 0.15)"
+  };
+
+  // Get initials for avatar
+  const getInitials = (firstName, lastName) => {
+    return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
+  };
 
   return (
-    <div className="reports-container">
-     
-
-      {/* Header */}
-      <div className="reports-header">
-        <div className="header-content">
-          <h1>
-            <i className="bi bi-file-earmark-text"></i> Employee Reports
-          </h1>
-          <p>Comprehensive employee analytics and statistics</p>
-        </div>
-        <button className="btn-export" onClick={handleExport}>
-          <i className="bi bi-download"></i> Export Report
-        </button>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="statistics-grid">
-        <div className="stat-card total">
-          <div className="stat-icon">
-            <i className="bi bi-people"></i>
+    
+    <div className="container employee-page mt-4">
+      <div className="employee-header mb-4">
+        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+          <div>
+            <h2 className="fw-bold mb-1">Employee Management</h2>
+            <p className="text-muted mb-0">Manage your team, track headcount, and review employee details in one polished view.</p>
           </div>
-          <div className="stat-content">
-            <h3>Total Employees</h3>
-            <p className="stat-number">{statistics.totalEmployees}</p>
-            <small>Active: {statistics.activeEmployees}</small>
-          </div>
-        </div>
-
-        <div className="stat-card active">
-          <div className="stat-icon">
-            <i className="bi bi-check-circle"></i>
-          </div>
-          <div className="stat-content">
-            <h3>Active Employees</h3>
-            <p className="stat-number">{statistics.activeEmployees}</p>
-            <small>
-              {(
-                ((statistics.activeEmployees / statistics.totalEmployees) *
-                  100) || 0
-              ).toFixed(1)}
-              %
-            </small>
-          </div>
-        </div>
-
-        <div className="stat-card inactive">
-          <div className="stat-icon">
-            <i className="bi bi-x-circle"></i>
-          </div>
-          <div className="stat-content">
-            <h3>Inactive Employees</h3>
-            <p className="stat-number">{statistics.inactiveEmployees}</p>
-            <small>
-              {(
-                ((statistics.inactiveEmployees / statistics.totalEmployees) *
-                  100) || 0
-              ).toFixed(1)}
-              %
-            </small>
-          </div>
-        </div>
-
-        <div className="stat-card departments">
-          <div className="stat-icon">
-            <i className="bi bi-building"></i>
-          </div>
-          <div className="stat-content">
-            <h3>Departments</h3>
-            <p className="stat-number">
-              {Object.keys(statistics.departmentCount).length}
-            </p>
-            <small>Active departments</small>
+          <div className="d-flex flex-wrap gap-2 align-items-center employee-header-actions">
+            <div className="search-wrap d-flex align-items-center border rounded-pill px-2 py-1 bg-white shadow-sm">
+              <i className="bi bi-search text-secondary"></i>
+              <input
+                type="text"
+                className="form-control form-control-sm border-0 ms-2 employee-search"
+                placeholder="Search employee..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
+              />
+            </div>
+            <button
+              className="btn btn-primary btn-pill"
+              onClick={() => setShowAddModal(true)}
+            >
+              <i className="bi bi-plus-lg me-1"></i>
+              Add Employee
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="filters-section">
-        <h2>Filters</h2>
-        <div className="filters-grid">
-          <div className="filter-group">
-            <label>Department</label>
-            <select
-              value={filters.department}
-              onChange={(e) =>
-                setFilters({ ...filters, department: e.target.value })
-              }
-              className="filter-select"
-            >
-              <option value="">All Departments</option>
-              {Object.keys(statistics.departmentCount).map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
-                </option>
-              ))}
-            </select>
+      <div className="row mb-3 stats-grid g-3">
+       
+        {/* Total Employees */}
+        <div className="col-md-3">
+          <div className="card text-white bg-primary shadow-sm">
+            <div className="card-body text-center">
+              <h6>Total Employees</h6>
+              <h3>{employees.length}</h3>
+            </div>
           </div>
+        </div>
 
-          <div className="filter-group">
-            <label>Status</label>
-            <select
-              value={filters.status}
-              onChange={(e) =>
-                setFilters({ ...filters, status: e.target.value })
-              }
-              className="filter-select"
-            >
-              <option value="">All Status</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="On Leave">On Leave</option>
-            </select>
+        {/* Active Employees */}
+        <div className="col-md-3">
+          <div className="card text-white bg-success shadow-sm">
+            <div className="card-body text-center">
+              <h6>Active Employees</h6>
+              <h3>{activeCount}</h3>
+            </div>
           </div>
+        </div>
+
+        {/* Inactive Employees */}
+        <div className="col-md-3">
+          <div className="card text-white bg-danger shadow-sm">
+            <div className="card-body text-center">
+              <h6>Inactive Employees</h6>
+              <h3>{inactiveCount}</h3>
+            </div>
+          </div>
+        </div>
+
+        {/* Monthly Recruitment */}
+        <div className="col-md-3">
+          <div className="card text-white bg-warning shadow-sm">
+            <div className="card-body text-center">
+              <h6>Monthly Recruitment</h6>
+              <h3>{monthlyRecruitment}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN CARD */}
+      <div className="card dashboard-card shadow-sm">
+        <div className="card-header bg-white border-0 pb-0">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+              <h5 className="mb-1 fw-bold">Employee Directory</h5>
+              <p className="text-muted small mb-0">Browse your employee roster and access actions for each team member.</p>
+            </div>
+            <div className="d-flex flex-wrap gap-2 align-items-center">
+              <span className="badge bg-light text-dark py-2 px-3 shadow-sm">Total: {employees.length}</span>
+              <button className="btn btn-outline-secondary btn-sm btn-pill" onClick={() => setCurrentPage(1)}>
+                Reset Filters
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* TABLE */}
+        <div className="table-responsive">
+          <table className="table table-hover mb-0">
+            <thead className="table-light">
+              <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Position</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {paginated.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-5 text-muted">
+                    No employees found. Try adjusting your search or add a new employee.
+                  </td>
+                </tr>
+              ) : (
+                paginated.map((emp) => (
+                  <tr key={emp.id}>
+                    <td>
+                      <div className="d-flex align-items-center gap-3">
+                        <div className="avatar-circle-sm">{getInitials(emp.firstName, emp.lastName)}</div>
+                        <div>
+                          <div className="fw-semi">{emp.firstName} {emp.middleName} {emp.lastName}</div>
+                    
+                        </div>
+                      </div>
+                    </td>
+                    <td>{emp.department || "N/A"}</td>
+                    <td>{emp.position || "N/A"}</td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          emp.status === "Inactive"
+                            ? "bg-danger"
+                            : "bg-success"
+                        } badge-pill`}
+                      >
+                        {emp.status || "Active"}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-sm btn-outline-primary action-btn"
+                        onClick={() => openActionsModal(emp)}
+                      >
+                        <i className="bi bi-three-dots-vertical me-1"></i> Actions
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* PAGINATION */}
+        <div className="card-footer bg-white border-0 d-flex justify-content-between align-items-center">
+          <button
+            className="btn btn-outline-secondary btn-sm btn-pill"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          >
+            Prev
+          </button>
+
+          <span className="text-muted small">
+            Page {currentPage} of {totalPages || 1}
+          </span>
 
           <button
-            className="btn-reset-filters"
-            onClick={() =>
-              setFilters({ department: "", status: "", dateRange: "all" })
-            }
+            className="btn btn-outline-secondary btn-sm btn-pill"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
           >
-            <i className="bi bi-arrow-clockwise"></i> Reset Filters
+            Next
           </button>
         </div>
       </div>
 
-      {/* Department Distribution */}
-      <div className="reports-grid">
-        <div className="report-card">
-          <h2>Employees by Department</h2>
-          <div className="department-list">
-            {Object.entries(statistics.departmentCount)
-              .sort(([, a], [, b]) => b - a)
-              .map(([dept, count]) => (
-                <div key={dept} className="department-item">
-                  <div className="dept-info">
-                    <span className="dept-name">{dept}</span>
-                    <span className="dept-count">{count} employees</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{
-                        width: `${(count / statistics.totalEmployees) * 100}%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </div>
-
-        <div className="report-card">
-          <h2>Positions Distribution</h2>
-          <div className="position-list">
-            {Object.entries(statistics.positionCount)
-              .sort(([, a], [, b]) => b - a)
-              .slice(0, 8)
-              .map(([pos, count]) => (
-                <div key={pos} className="position-item">
-                  <span className="position-name">{pos}</span>
-                  <span className="position-badge">{count}</span>
-                </div>
-              ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Employee List Table with Action Menu */}
-      <div className="table-section">
-        <div className="table-header">
-          <h2>Filtered Employee List ({filteredEmployees.length})</h2>
-        </div>
-        {filteredEmployees.length > 0 ? (
-          <div className="table-wrapper" ref={menuWrapperRef}>
-            <table className="employees-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Department</th>
-                  <th>Position</th>
-                  <th>Status</th>
-                  <th style={{ width: "60px" }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredEmployees.map((emp) => (
-                  <tr key={emp.id}>
-                    <td>
-                      <div className="employee-name">
-                        <div className="avatar">
-                          {emp.firstName?.charAt(0)}
-                          {emp.lastName?.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="name">
-                            {emp.firstName} {emp.lastName}
-                          </p>
-                        </div>
+      {/* ADD EMPLOYEE MODAL - Large Form */}
+      {showAddModal && (
+        <div style={modalOverlayStyle}>
+          <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleLarge}>
+            <div className="modal-content" style={modalContentStyle}>
+              <div className="modal-header py-3" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
+                <h5 className="modal-title">
+                  <i className="bi bi-person-plus-fill me-2"></i>
+                  Add New Employee
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowAddModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body py-4 px-4">
+                <form>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">First Name <span className="text-danger">*</span></label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-person"></i></span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          placeholder="Enter first name"
+                        />
                       </div>
-                    </td> 
-                    <td>{emp.email}</td>
-                    <td>{emp.department}</td>
-                    <td>{emp.position}</td>
-                    <td>
-                      <span
-                        className={`status-badge status-${emp.status?.toLowerCase()}`}
-                      >
-                        {emp.status}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-menu-container">
-                        <button
-                          type="button"
-                          className="menu-trigger"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleMenu(emp.id);
-                          }}
-                        >
-                          <i className="bi bi-three-dots-vertical"></i>
-                        </button>
-                        {showMenuFor === emp.id && (
-                          <div className="dropdown-menu" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              type="button"
-                              className="menu-item"
-                              onClick={() => handleViewProfile(emp)}
-                            >
-                              <i className="bi bi-eye"></i> View Profile
-                            </button>
-                            <button
-                              className="menu-item"
-                              onClick={() => handleEdit(emp)}
-                            >
-                              <i className="bi bi-pencil"></i> Edit
-                            </button>
-                            <div className="divider"></div>
-                            <button
-                              className="menu-item delete"
-                              onClick={() => handleDelete(emp)}
-                            >
-                              <i className="bi bi-trash"></i> Delete
-                            </button>
-                          </div>
-                        )}
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Middle Name</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-person-badge"></i></span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="middleName"
+                          value={formData.middleName}
+                          onChange={handleInputChange}
+                          placeholder="Enter middle name"
+                        />
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="no-data">
-            <i className="bi bi-inbox"></i>
-            <p>No employees found matching the selected filters</p>
-          </div>
-        )}
-      </div>
+                    </div>
+                  </div>
 
-      {/* View Profile Modal */}
-      {showViewModal && selectedEmployee && (
-        <div className="modal-overlay" onClick={() => setShowViewModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Employee Profile</h3>
-              <button className="close-modal" onClick={() => setShowViewModal(false)}>
-                <i className="bi bi-x-lg"></i>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="profile-avatar-large">
-                {selectedEmployee.firstName?.charAt(0)}
-                {selectedEmployee.lastName?.charAt(0)}
-              </div>
-              <div className="profile-field">
-                <strong>Full Name:</strong> {selectedEmployee.firstName} {selectedEmployee.lastName}
-              </div>
-              <div className="profile-field">
-                <strong>Email:</strong> {selectedEmployee.email}
-              </div>
-              <div className="profile-field">
-                <strong>Department:</strong> {selectedEmployee.department}
-              </div>
-              <div className="profile-field">
-                <strong>Position:</strong> {selectedEmployee.position}
-              </div>
-              <div className="profile-field">
-                <strong>Status:</strong> {selectedEmployee.status}
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowViewModal(false)}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                  <div className="row g-3 mt-1">
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Last Name <span className="text-danger">*</span></label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-person"></i></span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          placeholder="Enter last name"
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Department</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-building"></i></span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="department"
+                          value={formData.department}
+                          onChange={handleInputChange}
+                          placeholder="Enter department"
+                        />
+                      </div>
+                    </div>
+                  </div>
 
-      {/* Edit Modal */}
-      {showEditModal && selectedEmployee && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Edit Employee</h3>
-              <button className="close-modal" onClick={() => setShowEditModal(false)}>
-                <i className="bi bi-x-lg"></i>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>First Name</label>
-                <input
-                  type="text"
-                  value={editFormData.firstName}
-                  onChange={(e) => setEditFormData({ ...editFormData, firstName: e.target.value })}
-                />
+                  <div className="row g-3 mt-1">
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Position</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-briefcase"></i></span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="position"
+                          value={formData.position}
+                          onChange={handleInputChange}
+                          placeholder="Enter position"
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Email</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-envelope"></i></span>
+                        <input
+                          type="email"
+                          className="form-control"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder="Enter email"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row g-3 mt-1">
+                    <div className="col-md-12">
+                      <label className="form-label fw-semibold">Phone</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-telephone"></i></span>
+                        <input
+                          type="tel"
+                          className="form-control"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                          placeholder="Enter phone number"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </form>
               </div>
-              <div className="form-group">
-                <label>Last Naffffme</label>
-                <input
-                  type="text"
-                  value={editFormData.lastName}
-                  onChange={(e) => setEditFormData({ ...editFormData, lastName: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Email</label>
-                <input
-                  type="email"
-                  value={editFormData.email}
-                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Department</label>
-                <input
-                  type="text"
-                  value={editFormData.department}
-                  onChange={(e) => setEditFormData({ ...editFormData, department: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Position</label>
-                <input
-                  type="text"
-                  value={editFormData.position}
-                  onChange={(e) => setEditFormData({ ...editFormData, position: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Status</label>
-                <select
-                  value={editFormData.status}
-                  onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
+              <div className="modal-footer py-3">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowAddModal(false)}
                 >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                  <option value="On Leave">On Leave</option>
-                </select>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleAddEmployee}
+                >
+                  <i className="bi bi-check-lg me-1"></i> Add Employee
+                </button>
               </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowEditModal(false)}>
-                Cancel
-              </button>
-              <button className="btn-primary" onClick={handleSaveEdit}>
-                Save Changes
-              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && selectedEmployee && (
-        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Confirm Delete</h3>
-              <button className="close-modal" onClick={() => setShowDeleteModal(false)}>
-                <i className="bi bi-x-lg"></i>
-              </button>
+      {/* ACTIONS MODAL */}
+      {showActionsModal && selectedEmployee && (
+        <div style={modalOverlayStyle}>
+          <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleSmall}>
+            <div className="modal-content" style={modalContentStyle}>
+              <div className="modal-header py-3 " style={{ background: "linear-gradient(135deg, #667eea 0%, #667eea 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
+                <h5 className="modal-title">
+                  <i className="bi bi-grid-3x3-gap-fill me-2"></i>
+                  Actions
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white "
+                  onClick={() => setShowActionsModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body py-4">
+                <div className="text-center mb-3">  
+                  <div className="avatar-circle mb-2" style={{
+                    width: "70px",
+                    height: "70px",
+                    background: "linear-gradient(135deg, #667eea 0%, #667eea  100%)",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto",
+                    fontSize: "28px",
+                    fontWeight: "bold",
+                    color: "white"
+                  }}>
+                    {getInitials(selectedEmployee.firstName, selectedEmployee.lastName)}
+                  </div>
+                  <h6 className="mb-0 fw-bold fs-6">{selectedEmployee.firstName} {selectedEmployee.lastName}</h6>
+                  <small className="text-muted">{selectedEmployee.position || "No position"}</small>
+                </div>
+                <div className="d-grid gap-2">
+                  <button
+                    className="btn btn-outline-primary"
+                    onClick={() => openViewModal(selectedEmployee)}
+                  >
+                    <i className="bi bi-eye me-2"></i> View Profile
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => openEditModal(selectedEmployee)}
+                  >
+                    <i className="bi bi-pencil-square me-2"></i> Edit Employee
+                  </button>
+                  <button
+                    className="btn btn-danger"
+                    onClick={() => openDeleteConfirm(selectedEmployee)}
+                  >
+                    <i className="bi bi-trash me-2"></i> Delete Employee
+                  </button>
+                </div>
+              </div>
+              <div className="modal-footer py-2 justify-content-center">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowActionsModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-            <div className="modal-body">
-              <p>Are you sure you want to delete <strong>{selectedEmployee.firstName} {selectedEmployee.lastName}</strong>?</p>
-              <p style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "0.5rem" }}>
-                This action cannot be undone.
-              </p>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW PROFILE MODAL */}
+      {showViewModal && viewEmployee && (
+        <div style={modalOverlayStyle}>
+          <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleMedium}>
+            <div className="modal-content" style={modalContentStyle}>
+              <div className="modal-header py-3  justify-content-center" style={{ background: "linear-gradient(135deg, #667eea 0%, #667eea 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
+                <h5 className="modal-title">
+                  <i className="bi bi-person-circle me-2 justify-content-center"></i>
+                  Employee Profile
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowViewModal(false)}
+                ></button>
+              </div>
+              <div className="modal-body py-4">
+                <div className="text-center mb-4">
+                  <div className="avatar-large mb-3" style={{
+                    width: "100px",
+                    height: "100px",
+                    background: "linear-gradient(135deg, #667eea 0%, #667eea 100%)",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto",
+                    fontSize: "40px",
+                    fontWeight: "bold",
+                    color: "white",
+                    boxShadow: "0 4px 15px rgba(102, 126, 234, 0.3)"
+                  }}>
+                    {getInitials(viewEmployee.firstName, viewEmployee.lastName)}
+                  </div>
+                  <h4 className="fw-bold mb-1">{viewEmployee.firstName} {viewEmployee.middleName} {viewEmployee.lastName}</h4>
+                  <span className={`badge ${viewEmployee.status === "Inactive" ? "bg-danger" : "bg-success"} px-3 py-2`}>
+                    {viewEmployee.status || "Active"}
+                  </span>
+                </div>
+
+                <div className="profile-info-grid">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
+                        <small className="text-muted d-block mb-1">
+                          <i className="bi bi-building me-1"></i> Department
+                        </small>
+                        <strong className="fs-6">{viewEmployee.department || "Not specified"}</strong>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
+                        <small className="text-muted d-block mb-1">
+                          <i className="bi bi-briefcase me-1"></i> Position
+                        </small>
+                        <strong className="fs-6">{viewEmployee.position || "Not specified"}</strong>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
+                        <small className="text-muted d-block mb-1">
+                          <i className="bi bi-envelope me-1"></i> Email
+                        </small>
+                        <strong className="fs-6">{viewEmployee.email || "Not specified"}</strong>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
+                        <small className="text-muted d-block mb-1">
+                          <i className="bi bi-telephone me-1"></i> Phone
+                        </small>
+                        <strong className="fs-6">{viewEmployee.phone || "Not specified"}</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer py-3 justify-content-center">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setShowViewModal(false);
+                    openEditModal(viewEmployee);
+                  }}
+                >
+                  <i className="bi bi-pencil-square me-1"></i> Edit Profile
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowViewModal(false)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
-            <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>
-                Cancel
-              </button>
-              <button className="btn-danger" onClick={confirmDelete}>
-                Delete
-              </button>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT EMPLOYEE MODAL - Large Form */}
+      {showEditModal && (
+        <div style={modalOverlayStyle}>
+          <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleLarge}>
+            <div className="modal-content" style={modalContentStyle}>
+         <div className="modal-header py-3" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
+  <h5 className="modal-title">
+    <i className="bi bi-pencil-square me-2"></i>
+    Edit Employee
+  </h5>
+  <button
+    type="button"
+    className="btn-close btn-close-white ms-auto"
+    onClick={() => setShowEditModal(false)}
+  ></button>
+</div>
+   <div className="modal-body py-4 px-4">
+                <form>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">First Name <span className="text-danger">*</span></label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-person"></i></span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="firstName"
+                          value={editFormData.firstName}
+                          onChange={handleEditInputChange}
+                          placeholder="Enter first name"
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Middle Name</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-person-badge"></i></span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="middleName"
+                          value={editFormData.middleName}
+                          onChange={handleEditInputChange}
+                          placeholder="Enter middle name"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row g-3 mt-1">
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Last Name <span className="text-danger">*</span></label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-person"></i></span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="lastName"
+                          value={editFormData.lastName}
+                          onChange={handleEditInputChange}
+                          placeholder="Enter last name"
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Department</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-building"></i></span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="department"
+                          value={editFormData.department}
+                          onChange={handleEditInputChange}
+                          placeholder="Enter department"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row g-3 mt-1">
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Position</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-briefcase"></i></span>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="position"
+                          value={editFormData.position}
+                          onChange={handleEditInputChange}
+                          placeholder="Enter position"
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Email</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-envelope"></i></span>
+                        <input
+                          type="email"
+                          className="form-control"
+                          name="email"
+                          value={editFormData.email}
+                          onChange={handleEditInputChange}
+                          placeholder="Enter email"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row g-3 mt-1">
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Phone</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-telephone"></i></span>
+                        <input
+                          type="tel"
+                          className="form-control"
+                          name="phone"
+                          value={editFormData.phone}
+                          onChange={handleEditInputChange}
+                          placeholder="Enter phone number"
+                        />
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Status</label>
+                      <div className="input-group">
+                        <span className="input-group-text"><i className="bi bi-toggle-on"></i></span>
+                        <select
+                          className="form-select"
+                          name="status"
+                          value={editFormData.status}
+                          onChange={handleEditInputChange}
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer py-3  justify-content-center">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowEditModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleEditEmployee}
+                >
+                  <i className="bi bi-check-lg me-1"></i> Update Employee
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {deleteConfirm.show && (
+        <div style={modalOverlayStyle}>
+          <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleSmall}>
+            <div className="modal-content" style={modalContentStyle}>
+              <div className="modal-header py-3" style={{ background: "linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
+                <h5 className="modal-title">
+                  <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                  Confirm Delete
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setDeleteConfirm({ show: false, id: null })}
+                ></button>
+              </div>
+              <div className="modal-body py-4 text-center">
+                <i className="bi bi-trash3-fill" style={{ fontSize: "60px", color: "#dc2626" }}></i>
+                <p className="mb-2 mt-3 fw-semibold fs-6">Are you sure you want to delete this employee?</p>
+                <p className="text-danger mb-0 small">This action cannot be undone.</p>
+              </div>
+              <div className="modal-footer py-3">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setDeleteConfirm({ show: false, id: null })}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={handleDelete}
+                >
+                  <i className="bi bi-trash me-1"></i> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NOTIFICATION MODAL */}
+      {notification.show && (
+        <div style={{ ...modalOverlayStyle, zIndex: 1060 }}>
+          <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleSmall}>
+            <div className="modal-content" style={modalContentStyle}>
+              <div className={`modal-header bg-${notification.type} text-white py-3`}>
+                <h5 className="modal-title">
+                  {notification.type === "success" && <i className="bi bi-check-circle-fill me-2"></i>}
+                  {notification.type === "danger" && <i className="bi bi-exclamation-triangle-fill me-2"></i>}
+                  {notification.type === "warning" && <i className="bi bi-exclamation-circle-fill me-2"></i>}
+                  {notification.type === "success" ? "Success" : 
+                   notification.type === "danger" ? "Error" : 
+                   "Warning"}
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white"
+                  onClick={() => setNotification({ show: false, message: "", type: "" })}
+                ></button>
+              </div>
+              <div className="modal-body text-center py-4">
+                <p className="mb-0">{notification.message}</p>
+              </div>
+              <div className="modal-footer justify-content-center py-3">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setNotification({ show: false, message: "", type: "" })}
+                >
+                  OK
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -619,4 +1072,4 @@ function Employees() {
   );
 }
 
-export default Employees;  
+export default EmployeeIndex;

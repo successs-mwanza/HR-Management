@@ -7,7 +7,7 @@ function IncomeExpense() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const API_BASE_URL = "http://localhost:8080/api/income-expenses"; // api base URL
+  const API_BASE_URL = "http://localhost:8081/api/income-expenses"; // api base URL
 
   const [formData, setFormData] = useState({
     type: "income",

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import hrLogo from "./human-resource-logo-design-inspiration-vector-illustration_500223-487.avif";
 
 
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
@@ -93,13 +94,13 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       )}
       
       <div className={`sidebar shadow-lg ${sidebarOpen ? "mobile-open" : ""}`}>
-
-      <div className="sidebar-header text-center">
-        <h5 className="fw-bold">
-          <i className="bi bi-speedometer2 me-2"></i>
-          Admin Dashboard
-        </h5>
-      </div>
+<div className="sidebar-header d-flex align-items-center">
+  <img src={hrLogo} alt="HR Logo" className="sidebar-logo-img" />
+  <div className="sidebar-header-text">
+    <h5 className="fw-bold mb-1" style={{ marginLeft: "50px", padding: "0" }}>HR</h5>
+    <h6 className="text-italics mb-1">Management System</h6>
+  </div>
+</div>
 
       <ul className="sidebar-list">
 

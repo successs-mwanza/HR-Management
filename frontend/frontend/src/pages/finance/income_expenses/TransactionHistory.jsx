@@ -13,7 +13,7 @@ function TransactionHistory() {
   const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const API_BASE_URL = "http://localhost:8080/api/income-expenses";
+  const API_BASE_URL = "http://localhost:8081/api/income-expenses";
 
   // Fetch transactions from backend
   useEffect(() => {

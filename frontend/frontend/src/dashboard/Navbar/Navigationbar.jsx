@@ -14,7 +14,7 @@ function Navbar({ sidebarOpen, setSidebarOpen }) {
 
     // Option 2 (better): fetch from backend
     
-    fetch("http://localhost:8080/api/users/me", {
+    fetch("http://localhost:8081/api/users/me", {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },
@@ -50,15 +50,6 @@ function Navbar({ sidebarOpen, setSidebarOpen }) {
 
         <i className="bi bi-bell"></i>
 
-        {/* USER NAME DISPLAY */}
-        <div className="user-info">
-          <i className="bi bi-person-circle"></i>
-          <span>{username || "User"}</span>
-        </div>
-
-        <button onClick={handleLogout} className="logout-btn">
-          Logout
-        </button>
 
       </div>
 
