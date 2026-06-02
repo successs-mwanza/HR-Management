@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useState } from "react";
 import "./App.css";
-import Navbar from "./dashboard/Navbar/Navigationbar";
+import CustomNavbar from "./dashboard/Navbar/CustomNavBar";
 import Sidebar from "./dashboard/Sidebar/AppSidebar";
 
 
@@ -37,7 +37,7 @@ function Layout() {
       {!hideLayout && (
         <>
           <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-          <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />dddddd
+          <CustomNavbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
         </>
       )}
 
@@ -51,12 +51,10 @@ function Layout() {
             <Route path="/signup" element={<Signup />} />
                 <Route path="/employees" element={<Employees />} /> 
             <Route path="/dashboard" element={<DashboardCRM />} />
-            
         
 
          
             {/* <Route path="/addemployee" element={<AddEmployee />} /> */}
-            
 
             {/* Finance Routes */}
             <Route path="/income-expenses" element={<IncomeExpense />} />

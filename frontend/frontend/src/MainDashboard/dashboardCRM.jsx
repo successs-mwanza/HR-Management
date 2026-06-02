@@ -1,4 +1,3 @@
-import "./dashboard.css";
 
 function DashboardCRM() {
   return (

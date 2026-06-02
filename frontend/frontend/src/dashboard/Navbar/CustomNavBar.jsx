@@ -4,10 +4,16 @@ import { useLocation } from "react-router-dom";
 
 const getPageTitle = (pathname) => {
   if (pathname.startsWith("/employees")) return "Employee Management";
+    if (pathname.startsWith("/tasks")) return "Tasks Management";
+    if (pathname.startsWith("/payroll")) return "Financial Management";
+    if (pathname.startsWith("/budgeting")) return "Financial Management";
+    if (pathname.startsWith("/invoice")) return "Financial Management";
+    if (pathname.startsWith("/payslip")) return "Financial Management";
+    if (pathname.startsWith("/income-expenses")) return "Financial Management";
   return "";
 };
 
-function Navbar({ sidebarOpen, setSidebarOpen }) {
+function CustomNavbar({ sidebarOpen, setSidebarOpen }) {
   const location = useLocation();
   const pageTitle = getPageTitle(location.pathname);
   
@@ -42,6 +48,7 @@ function Navbar({ sidebarOpen, setSidebarOpen }) {
   return (
     <nav className="navbar">
 
+      {pageTitle && <div className="navbar-brand">{pageTitle}</div>}
       {/* Left side */}
       <div className="nav-left">
         <div className="menu-icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -51,14 +58,12 @@ function Navbar({ sidebarOpen, setSidebarOpen }) {
         <div className={`back-arrow ${sidebarOpen ? "show" : ""}`} onClick={() => setSidebarOpen(false)}>
           <i className="bi bi-chevron-left"></i>
         </div>
-
-        {pageTitle && <div className="module-title">{pageTitle}</div>}
       </div>
 
       {/* Right side */}
       <div className="nav-right">
 
-        <i className="bi bi-bell"></i>
+        
 
 
       </div>
@@ -67,4 +72,4 @@ function Navbar({ sidebarOpen, setSidebarOpen }) {
   );
 }
 
-export default Navbar;
+export default CustomNavbar;

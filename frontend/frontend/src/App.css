@@ -140,19 +140,6 @@
   background-color: #f1f1f1;
 }
 
-/* View Profile Button */
-.view-btn {
-  background-color: #667eea;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.3s ease;
-}
-
 .view-btn:hover {
   background-color: #5568d3;
   color: white;
@@ -163,83 +150,7 @@
   background-color: #4457b3;
 }
 
-/* List Header */
-.list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 70%;
-  margin-bottom: 20px;
-  padding: 0 20px;
-  margin-left: auto;
-  margin-right: auto;
-}
 
-.list-header .title {
-  margin-bottom: 0;
-  flex: 1;
-}
-
-/* Add Button */
-.add-btn {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.3s ease;
-  white-space: nowrap;
-}
-
-.add-btn:hover {
-  background-color: #218838;
-}
-
-.add-btn:active {
-  background-color: #1e7e34;
-}
-
-/* Action Buttons in Table */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.edit-table-btn {
-  background-color: #0f172a;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: background-color 0.3s ease;
-}
-
-.edit-table-btn:hover {
-  background-color: #1a2a45;
-}
-
-.delete-table-btn {
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 500;
-  transition: background-color 0.3s ease;
-}
-
-.delete-table-btn:hover {
-  background-color: #c82333;
-}
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {
@@ -260,8 +171,33 @@
     align-items: flex-start;
     gap: 10px;
   }
+}  
+/**************************** Home Dashboard ******************************************************/
+.dashboard-container {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f1f5f9;
 }
 
+.welcome-card {
+  background: #ffffff;
+  padding: 40px 60px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.welcome-card h1 {
+  margin-bottom: 10px;
+  color: #0f172a;
+}
+
+.welcome-card p {
+  color: #64748b;
+  font-size: 16px;
+}
 /************Sidebar *****************************************/
 .sidebar {
   width: 250px;
@@ -451,7 +387,7 @@
   left: 0;
   width: 100%;
   height: 60px;
-  background: #d9d9db;
+  background: #0f172a;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -517,11 +453,13 @@
   color: #2563eb;
 }
 
-.back-arrow {
-  font-size: 24px;
-  cursor: pointer;
-  color: #ffffff;
-  display: none;
+.navbar-brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+    color: #ffffff !important;
+
+  display: block;
   transition: 0.3s;
   margin-right: 10px;
 }
@@ -771,6 +709,17 @@
     width: 100%;
   }
 }
+
+.status-active {
+  background-color: #3abd45;
+  color: #ffffff;
+}
+
+.status-inactive {
+  background-color: #dc3545;
+  color: #ffffff;
+}
+
 
 /****** Finance css******************************/
 .income-expense-container {
@@ -1238,6 +1187,7 @@
   font-weight: 600;
   text-transform: uppercase;
 }
+
 
 .badge-income {
   background-color: #d4edda;

@@ -14,7 +14,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
    // main Home dashboard item
     {name:"Main Dashboard",
     icon: "bi bi-speedometer2",
-    link: "/crm"},
+    link: "/dashboard"},
 
     
 // employee menu with submenus
@@ -33,7 +33,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     //Tasks item
     {
       name: "Tasks Management",
-      icon: "bi bi-list-check"
+      icon: "bi bi-list-check",
+      link: "/tasks"
     },
     //Finance item
     {
@@ -108,32 +109,46 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
           <li key={index}>
 
             {/* Parent Menu */}
-            <div
-              className="sidebar-parent d-flex align-items-center justify-content-between"
-              onClick={() => {
-                if (item.link) {
-                  // If it's a link item, just navigate and close sidebar
-                  setSidebarOpen(false);
-                } else if (item.children) {
-                  // If it has children, toggle the dropdown
-                  toggleMenu(index);
-                }
-              }}
-            >
-              <span>
-                <i className={`${item.icon} me-2`}></i>
-                {item.name}
-              </span>
-
-              {/* Only show dropdown arrow if item has children */}
-              {item.children && (
-                <i
-                  className={`bi ${
-                    openIndex === index ? "bi-chevron-up" : "bi-chevron-down"
-                  }`}
-                ></i>
-              )}
-            </div>
+            {item.link ? (
+              <Link
+                to={item.link}
+                className="sidebar-parent d-flex align-items-center justify-content-between"
+                onClick={() => setSidebarOpen(false)}
+              >
+                <span>
+                  <i className={`${item.icon} me-2`}></i>
+                  {item.name}
+                </span>
+                {item.children && (
+                  <i
+                    className={`bi ${
+                      openIndex === index ? "bi-chevron-up" : "bi-chevron-down"
+                    }`}
+                  ></i>
+                )}
+              </Link>
+            ) : (
+              <div
+                className="sidebar-parent d-flex align-items-center justify-content-between"
+                onClick={() => {
+                  if (item.children) {
+                    toggleMenu(index);
+                  }
+                }}
+              >
+                <span>
+                  <i className={`${item.icon} me-2`}></i>
+                  {item.name}
+                </span>
+                {item.children && (
+                  <i
+                    className={`bi ${
+                      openIndex === index ? "bi-chevron-up" : "bi-chevron-down"
+                    }`}
+                  ></i>
+                )}
+              </div>
+            )}
 
             {/* Submenu */}
             {openIndex === index && item.children && (

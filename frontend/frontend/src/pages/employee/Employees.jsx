@@ -331,8 +331,6 @@ function EmployeeIndex() {
       <div className="employee-header mb-4">
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
           <div>
-            <h2 className="fw-bold mb-1">Employee Management</h2>
-            <p className="text-muted mb-0">Manage your team, track headcount, and review employee details in one polished view.</p>
           </div>
           <div className="d-flex flex-wrap gap-2 align-items-center employee-header-actions">
             <div className="search-wrap d-flex align-items-center border rounded-pill px-2 py-1 bg-white shadow-sm">
@@ -407,7 +405,7 @@ function EmployeeIndex() {
         <div className="card-header bg-white border-0 pb-0">
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
-              <h5 className="mb-1 fw-bold">Employee Directory</h5>
+              <h5 className="mb-1 fw-bold">Employee Management</h5>
               <p className="text-muted small mb-0">Browse your employee roster and access actions for each team member.</p>
             </div>
             <div className="d-flex flex-wrap gap-2 align-items-center">
@@ -457,8 +455,8 @@ function EmployeeIndex() {
                       <span
                         className={`badge ${
                           emp.status === "Inactive"
-                            ? "bg-danger"
-                            : "bg-success"
+                            ? "status-inactive"
+                            : "status-active"
                         } badge-pill`}
                       >
                         {emp.status || "Active"}
@@ -759,7 +757,7 @@ function EmployeeIndex() {
                     {getInitials(viewEmployee.firstName, viewEmployee.lastName)}
                   </div>
                   <h4 className="fw-bold mb-1">{viewEmployee.firstName} {viewEmployee.middleName} {viewEmployee.lastName}</h4>
-                  <span className={`badge ${viewEmployee.status === "Inactive" ? "bg-danger" : "bg-success"} px-3 py-2`}>
+                  <span className={`badge ${viewEmployee.status === "Inactive" ? "status-inactive" : "status-active"} px-3 py-2`}>
                     {viewEmployee.status || "Active"}
                   </span>
                 </div>
@@ -952,7 +950,7 @@ function EmployeeIndex() {
                       </div>
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">Status</label>
+                      <label className="italic">Status</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-toggle-on"></i></span>
                         <select
