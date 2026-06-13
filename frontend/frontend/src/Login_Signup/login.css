@@ -1,99 +1,264 @@
-/* Container */
-.signup-container {
+/* Modern Login Page Styling */
+
+.login-container {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #0f172a, #1e293b);
-  padding: 20px;
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--secondary) 100%);
+  padding: var(--spacing-4);
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Form card */
-.signup-form {
-  background: #ffffff;
-  padding: 50px 40px;
-  border-radius: 16px;
+/* Animated background elements */
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  animation: drift 6s ease-in-out infinite;
+}
+
+.login-container::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -5%;
+  width: 400px;
+  height: 400px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  animation: drift 8s ease-in-out infinite reverse;
+}
+
+@keyframes drift {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(30px);
+  }
+}
+
+/* Login Form Card */
+.login-form {
+  background: var(--bg-white);
+  padding: var(--spacing-12);
+  border-radius: var(--radius-2xl);
   width: 100%;
-  max-width: 420px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  max-width: 450px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   text-align: center;
-  transition: transform 0.3s ease;
+  transition: all var(--transition-base);
+  position: relative;
+  z-index: 1;
+  animation: scaleIn 0.5s ease-in-out;
 }
 
-.signup-form:hover {
+.login-form:hover {
   transform: translateY(-5px);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35);
 }
 
 /* Form heading */
-.signup-form h2 {
-  margin-bottom: 30px;
-  color: #1e293b;
-  font-size: 28px;
-  font-weight: 700;
+.login-form h2 {
+  margin-bottom: var(--spacing-3);
+  color: var(--gray-900);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  letter-spacing: -0.5px;
+}
+
+/* Form subheading */
+.login-form p {
+  color: var(--gray-500);
+  font-size: var(--text-sm);
+  margin-bottom: var(--spacing-8);
+  line-height: var(--line-height-relaxed);
+}
+
+/* Form Group */
+.login-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-6);
+  text-align: left;
+}
+
+.login-form-group label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--gray-700);
 }
 
 /* Inputs */
-.signup-form input {
+.login-form input {
   width: 100%;
-  padding: 14px 16px;
-  margin-bottom: 18px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  font-size: 16px;
-  transition: all 0.3s ease;
+  padding: var(--spacing-4) var(--spacing-4);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  transition: all var(--transition-fast);
+  background: var(--bg-white);
+  color: var(--gray-900);
+  font-family: var(--font-family);
 }
 
-.signup-form input:focus {
+.login-form input::placeholder {
+  color: var(--gray-400);
+}
+
+.login-form input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+  background: var(--bg-light);
+}
+
+.login-form input:disabled {
+  background: var(--gray-100);
+  color: var(--gray-500);
+  cursor: not-allowed;
 }
 
 /* Button */
-.signup-form button {
+.login-form button {
   width: 100%;
-  padding: 14px 0;
-  background: #007bff;
+  padding: var(--spacing-4);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
   color: white;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
   border: none;
-  border-radius: 10px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-base);
+  margin-top: var(--spacing-4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: var(--shadow-md);
 }
 
-.signup-form button:hover {
-  background: #0056b3;
+.login-form button:hover {
   transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-dark) 100%);
 }
 
-/* Text below button */
-.signup-form p {
-  margin-top: 18px;
-  font-size: 14px;
-  color: #475569;
+.login-form button:active {
+  transform: translateY(0);
 }
 
-.signup-form p span {
-  color: #007bff;
+.login-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Forgot Password */
+.forgot-password {
+  text-align: right;
+  margin-top: var(--spacing-3);
+}
+
+.forgot-password a {
+  color: var(--primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  transition: color var(--transition-fast);
+  text-decoration: none;
+}
+
+.forgot-password a:hover {
+  color: var(--primary-light);
+  text-decoration: underline;
+}
+
+/* Sign up link */
+.login-form .signup-link {
+  margin-top: var(--spacing-8);
+  padding-top: var(--spacing-8);
+  border-top: 1px solid var(--border-light);
+  font-size: var(--text-sm);
+  color: var(--gray-600);
+}
+
+.login-form .signup-link span {
+  color: var(--primary);
   cursor: pointer;
-  font-weight: 600;
-  transition: color 0.3s ease;
+  font-weight: var(--font-semibold);
+  transition: color var(--transition-fast);
 }
 
-.signup-form p span:hover {
-  color: #0056b3;
+.login-form .signup-link span:hover {
+  color: var(--primary-light);
 }
 
-/* Responsive */
-@media (max-width: 480px) {
-  .signup-form {
-    padding: 40px 20px;
+/* Error/Success Messages */
+.login-form .error-message {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  margin-bottom: var(--spacing-4);
+  border-left: 4px solid var(--error);
+  animation: slideIn 0.3s ease-in-out;
+}
+
+.login-form .success-message {
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  margin-bottom: var(--spacing-4);
+  border-left: 4px solid var(--success);
+  animation: slideIn 0.3s ease-in-out;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .login-form {
+    padding: var(--spacing-8) var(--spacing-6);
+    border-radius: var(--radius-xl);
   }
 
-  .signup-form h2 {
-    font-size: 24px;
+  .login-form h2 {
+    font-size: var(--text-2xl);
+  }
+
+  .login-form input {
+    padding: var(--spacing-3) var(--spacing-3);
+  }
+
+  .login-form button {
+    padding: var(--spacing-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: var(--spacing-4);
+  }
+
+  .login-form {
+    padding: var(--spacing-6);
+    border-radius: var(--radius-lg);
+  }
+
+  .login-form h2 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--spacing-4);
+  }
+
+  .login-form p {
+    font-size: var(--text-xs);
   }
 }

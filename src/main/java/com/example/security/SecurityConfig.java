@@ -16,13 +16,12 @@ import java.util.Arrays;
 @Configuration
 public class SecurityConfig {
 
-    // ✅ ADD THIS (FIXES YOUR ERROR)
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ SECURITY + CORS
+    //  SECURITY + CORS
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -35,7 +34,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ✅ CORS CONFIG
+    //  CORS CONFIG
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

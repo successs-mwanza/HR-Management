@@ -21,7 +21,7 @@ public class Employee {
     private String position; // store position
     private Boolean status; // store status
  //constructor, getters and setters
-    public Employee() {
+    public Employee() {  
     }
     public Employee(String firstName, String middleName, String lastName) {
         this.firstName = firstName; // this will store the value of fname in firstName variable

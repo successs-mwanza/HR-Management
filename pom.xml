@@ -40,6 +40,14 @@
         <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
 
+<!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    
+    <scope>compile</scope>
+</dependency>
+
     <!-- JWT -->
     <dependency>
         <groupId>io.jsonwebtoken</groupId>
@@ -80,13 +88,7 @@
    <artifactId>postgresql</artifactId>
    <scope>runtime</scope>
   </dependency>
-  
-  <!-- Lombok
-  <dependency>
-   <groupId>org.projectlombok</groupId>
-   <artifactId>lombok</artifactId>
-   <optional>true</optional>
-  </dependency> -->
+
 
   <!-- Testing -->
   <dependency>
@@ -95,12 +97,8 @@
    <scope>test</scope>
   </dependency>
 
-  <!-- H2 Database for Testing -->
-  <!-- <dependency>
-   <groupId>com.h2database</groupId>
-   <artifactId>h2</artifactId>
-   <scope>test</scope>
-  </dependency> -->
+
+  
 
  </dependencies>
 
@@ -110,7 +108,7 @@
    <plugin>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-maven-plugin</artifactId>
-   </plugin>
+   </plugin> 
 
   </plugins>
  </build>

@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useState } from "react";
 import "./App.css";
+
+import "./dashboard/Sidebar/Sidebar.css";
 import CustomNavbar from "./dashboard/Navbar/CustomNavBar";
 import Sidebar from "./dashboard/Sidebar/AppSidebar";
 
