@@ -18,6 +18,7 @@ import Login from "./Login_Signup/login";
 import Invoice from "./pages/finance/invoice/invoice";
 import DashboardCRM from "./MainDashboard/dashboardCRM";
 import Payslip from "./pages/finance/payroll/payslip";
+import Attendance from "./pages/employee/Attendance";
 
 
 import Employees from "./pages/employee/Employees";
@@ -52,6 +53,7 @@ function Layout() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
                 <Route path="/employees" element={<Employees />} /> 
+                 <Route path="/attendance" element={<Attendance />} /> 
             <Route path="/dashboard" element={<DashboardCRM />} />
         
 

@@ -1,87 +1,187 @@
 package com.example.Model;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "employee")
+
+
 public class Employee {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String firstName; // store fname
-    private String middleName;// store mname
-    private String lastName;    // store lname
-    private String department; // store department
-    private String email; // store email
-    private String phone; // store phone
-    private String position; // store position
-    private Boolean status; // store status
- //constructor, getters and setters
-    public Employee() {  
+    @Column(name = "first_name", nullable = false)
+    private String firstName;
+
+    @Column(name = "middle_name")
+    private String middleName;
+
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
+
+    @Column(name = "department")
+    private String department;
+
+    @Column(unique = true)
+    private String email;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "position")
+    private String position;
+
+    @Column(name = "status")
+    private Boolean status;
+
+    @Column(name = "hire_date")
+    private LocalDate hireDate;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    // ===== Constructors =====
+    public Employee() {
     }
+
     public Employee(String firstName, String middleName, String lastName) {
-        this.firstName = firstName; // this will store the value of fname in firstName variable
-        this.middleName = middleName; // this will store the value of mname in middleName variable
-        this.lastName = lastName; // this will store the value of lname in lastName variable
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.lastName = lastName;
     }
+
+    public Employee(String firstName, String middleName, String lastName, String department, 
+                    String email, String phone, String position, Boolean status) {
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.lastName = lastName;
+        this.department = department;
+        this.email = email;
+        this.phone = phone;
+        this.position = position;
+        this.status = status;
+    }
+
+    // ===== Getters =====
     public Long getId() {
         return id;
     }
+
     public String getFirstName() {
         return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
     }
 
     public String getMiddleName() {
         return middleName;
     }
 
-    public void setMiddleName(String middleName) {
-        this.middleName = middleName;
-    }
-//
     public String getLastName() {
         return lastName;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public String getPosition() {
+        return position;
+    }
+
+    public Boolean getStatus() {
+        return status;
+    }
+
+    public LocalDate getHireDate() {
+        return hireDate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    // ===== Setters =====
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setMiddleName(String middleName) {
+        this.middleName = middleName;
     }
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
-    public String getdepartment(){
-        return department;
+
+    public void setDepartment(String department) {
+        this.department = department;
     }
-    public void setdepartment(String daprtment){
-        this.department=department;
+
+    public void setEmail(String email) {
+        this.email = email;
     }
-    public String getemail(){
-        return email;
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
-    public void setemail(String email){
-        this.email=email;
-    } 
-    public String getphone(){
-        return phone;
+
+    public void setPosition(String position) {
+        this.position = position;
     }
-    public void setphone(String phone){
-        this.phone=phone;
+
+    public void setStatus(Boolean status) {
+        this.status = status;
     }
-    public String getposition(){
-        return position;
+
+    public void setHireDate(LocalDate hireDate) {
+        this.hireDate = hireDate;
     }
-    public void setposition(String position){
-        this.position=position;
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
-public Boolean getstatus(){
-    return status;
-}      
-public void setstatus (boolean status){
-    this.status=status;
-}
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    // ===== Helper Methods =====
+    public String getFullName() {
+        if (middleName != null && !middleName.isEmpty()) {
+            return firstName + " " + middleName + " " + lastName;
+        }
+        return firstName + " " + lastName;
+    }
+
+    public boolean isActive() {
+        return status != null && status;
+    }
 }
