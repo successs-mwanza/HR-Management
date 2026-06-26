@@ -6,7 +6,6 @@ import "./dashboard/Sidebar/Sidebar.css";
 import CustomNavbar from "./dashboard/Navbar/CustomNavBar";
 import Sidebar from "./dashboard/Sidebar/AppSidebar";
 
-
 // import AddEmployee from "./pages/employee/AddEmployee";                      
 // import EditEmployee from "./pages/employee/EditEmployee";
 import IncomeExpense from "./pages/finance/income_expenses/incom_expense";
@@ -19,8 +18,7 @@ import Invoice from "./pages/finance/invoice/invoice";
 import DashboardCRM from "./MainDashboard/dashboardCRM";
 import Payslip from "./pages/finance/payroll/payslip";
 import Attendance from "./pages/employee/Attendance";
-
-
+import EmployeeReport from "./pages/employee/EmployeeReport"
 import Employees from "./pages/employee/Employees";
 // import EmployeeReports from "./pages/reports & analytics/Employee Reports";
 
@@ -52,12 +50,13 @@ function Layout() {
             <Route path="/" element={<Crm />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-                <Route path="/employees" element={<Employees />} /> 
-                 <Route path="/attendance" element={<Attendance />} /> 
+            <Route path="/employees" element={<Employees />} /> 
+            <Route path="/attendance" element={<Attendance />} /> 
             <Route path="/dashboard" element={<DashboardCRM />} />
-        
+            
+            {/* Employee Report Route - with employeeId parameter */}
+            <Route path="/employee-report/:employeeId" element={<EmployeeReport />} />
 
-         
             {/* <Route path="/addemployee" element={<AddEmployee />} /> */}
 
             {/* Finance Routes */}
@@ -67,9 +66,8 @@ function Layout() {
             <Route path="/payroll" element={<Payroll />} />
             <Route path="/payslip" element={<Payslip />} />
 
-             {/* Reports and Analytics Routes */}
-               {/* <Route path="/employee-reports" element={<EmployeeReports />} />  */}
-
+            {/* Reports and Analytics Routes */}
+            {/* <Route path="/employee-reports" element={<EmployeeReports />} /> */}
           </Routes>
         </div>
       </div>
@@ -85,4 +83,4 @@ function App() {
   );
 }
 
-export default App;   
+export default App;

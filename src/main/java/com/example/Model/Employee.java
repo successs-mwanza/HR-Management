@@ -1,8 +1,5 @@
 package com.example.Model;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,13 +9,12 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "employee")
-
-
 public class Employee {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto-generates in database
+    @Column(name = "id")
+    private Long id;  // THIS WAS MISSING - now it will appear in queries
 
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -44,15 +40,6 @@ public class Employee {
     @Column(name = "status")
     private Boolean status;
 
-    @Column(name = "hire_date")
-    private LocalDate hireDate;
-
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
     // ===== Constructors =====
     public Employee() {
     }
@@ -76,7 +63,7 @@ public class Employee {
     }
 
     // ===== Getters =====
-    public Long getId() {
+    public Long getId() {  // ADDED GETTER
         return id;
     }
 
@@ -112,20 +99,8 @@ public class Employee {
         return status;
     }
 
-    public LocalDate getHireDate() {
-        return hireDate;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
     // ===== Setters =====
-    public void setId(Long id) {
+    public void setId(Long id) {  // ADDED SETTER
         this.id = id;
     }
 
@@ -159,18 +134,6 @@ public class Employee {
 
     public void setStatus(Boolean status) {
         this.status = status;
-    }
-
-    public void setHireDate(LocalDate hireDate) {
-        this.hireDate = hireDate;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     // ===== Helper Methods =====

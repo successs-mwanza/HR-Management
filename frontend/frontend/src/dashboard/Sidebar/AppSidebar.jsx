@@ -18,7 +18,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       icon: "bi bi-people",
       children: [
         { name: "Employee", icon: "bi bi-person", link: "/employees" },
-        { name: "Attendance", icon: "bi bi-calendar-check", link: "/attendance" },
+      
       ]
     },
 

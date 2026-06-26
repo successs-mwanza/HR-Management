@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
+
 function Attendance() {
   const navigate = useNavigate();
   const [attendance, setAttendance] = useState([]);
@@ -35,28 +36,20 @@ function Attendance() {
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [showCheckOutModal, setShowCheckOutModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [checkInTime, setCheckInTime] = useState("");
-  const [checkOutTime, setCheckOutTime] = useState("");
   const [checkInLocation, setCheckInLocation] = useState("");
 
+  const API_BASE_URL = "http://localhost:8081/api";
+
+  // Fetch data when date changes
   useEffect(() => {
     fetchAttendance();
     fetchEmployees();
   }, [selectedDate]);
 
-  // Auto-hide notification after 3 seconds
-  useEffect(() => {
-    if (notification.show) {
-      const timer = setTimeout(() => {
-        setNotification({ ...notification, show: false });
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [notification.show]);
-
+  // Fetch employees
   const fetchEmployees = async () => {
     try {
-      const response = await fetch("http://localhost:8081/api/employees");
+      const response = await fetch(`${API_BASE_URL}/employees`);
       if (!response.ok) throw new Error("Failed to fetch employees");
       const data = await response.json();
       setEmployees(data);
@@ -66,30 +59,39 @@ function Attendance() {
       setDepartments(depts);
     } catch (err) {
       console.error("Error fetching employees:", err);
+      showNotification("Error", "Failed to load employees: " + err.message, "error");
     }
   };
 
+  // Fetch attendance
   const fetchAttendance = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`http://localhost:8081/api/attendance?date=${selectedDate}`);
+      setError(null);
+      
+      // Fetch attendance for selected date
+      const response = await fetch(`${API_BASE_URL}/attendance?date=${selectedDate}`);
       if (!response.ok) throw new Error("Failed to fetch attendance");
       const data = await response.json();
       setAttendance(data);
+      
+      // Calculate stats
       calculateStats(data);
-      setError(null);
     } catch (err) {
       setError(err.message);
+      showNotification("Error", "Failed to load attendance: " + err.message, "error");
     } finally {
       setLoading(false);
     }
   };
 
+  // Calculate statistics
   const calculateStats = (data) => {
-    const present = data.filter(a => a.status === "present").length;
-    const absent = data.filter(a => a.status === "absent").length;
-    const late = data.filter(a => a.status === "late").length;
-    const onLeave = data.filter(a => a.status === "on_leave").length;
+    // Convert status to uppercase if needed (since backend uses UPPERCASE)
+    const present = data.filter(a => a.status?.toUpperCase() === "PRESENT").length;
+    const absent = data.filter(a => a.status?.toUpperCase() === "ABSENT").length;
+    const late = data.filter(a => a.status?.toUpperCase() === "LATE").length;
+    const onLeave = data.filter(a => a.status?.toUpperCase() === "ON_LEAVE").length;
     const total = data.length;
 
     setStats({
@@ -102,6 +104,7 @@ function Attendance() {
     });
   };
 
+  // Show notification
   const showNotification = (title, message, type = "success") => {
     setNotification({
       show: true,
@@ -109,12 +112,18 @@ function Attendance() {
       type: type,
       title: title
     });
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
   };
 
+  // Handle Check In
   const handleCheckIn = async (employeeId) => {
     try {
       const now = new Date().toISOString();
-      const response = await fetch("http://localhost:8081/api/attendance/check-in", {
+      const response = await fetch(`${API_BASE_URL}/attendance/check-in`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -125,20 +134,25 @@ function Attendance() {
         })
       });
 
-      if (!response.ok) throw new Error("Failed to check in");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to check in");
+      }
       
       showNotification("Success", "Check-in successful!", "success");
-      fetchAttendance();
+      await fetchAttendance(); // Refresh data
       setShowCheckInModal(false);
+      setCheckInLocation("");
     } catch (err) {
       showNotification("Error", "Failed to check in: " + err.message, "error");
     }
   };
 
+  // Handle Check Out
   const handleCheckOut = async (employeeId) => {
     try {
       const now = new Date().toISOString();
-      const response = await fetch("http://localhost:8081/api/attendance/check-out", {
+      const response = await fetch(`${API_BASE_URL}/attendance/check-out`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -148,32 +162,41 @@ function Attendance() {
         })
       });
 
-      if (!response.ok) throw new Error("Failed to check out");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to check out");
+      }
       
       showNotification("Success", "Check-out successful!", "success");
-      fetchAttendance();
+      await fetchAttendance(); // Refresh data
       setShowCheckOutModal(false);
     } catch (err) {
       showNotification("Error", "Failed to check out: " + err.message, "error");
     }
   };
 
+  // Handle Manual Status Update
   const handleManualStatusUpdate = async (employeeId, status) => {
     try {
-      const response = await fetch(`http://localhost:8081/api/attendance/${employeeId}/status`, {
+      // Convert to uppercase for backend
+      const statusValue = status.toUpperCase();
+      const response = await fetch(`${API_BASE_URL}/attendance/${employeeId}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           date: selectedDate,
-          status: status,
+          status: statusValue,
           reason: "Manual update"
         })
       });
 
-      if (!response.ok) throw new Error("Failed to update status");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update status");
+      }
       
       showNotification("Success", "Status updated successfully!", "success");
-      fetchAttendance();
+      await fetchAttendance(); // Refresh data
     } catch (err) {
       showNotification("Error", "Failed to update status: " + err.message, "error");
     }
@@ -185,7 +208,7 @@ function Attendance() {
 
     // Filter by status
     if (filterStatus !== "all") {
-      filtered = filtered.filter(a => a.status === filterStatus);
+      filtered = filtered.filter(a => a.status?.toUpperCase() === filterStatus.toUpperCase());
     }
 
     // Filter by department
@@ -197,6 +220,18 @@ function Attendance() {
   };
 
   const filteredAttendance = getFilteredAttendance();
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="attendance-container">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading attendance data...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Modal styles
   const modalOverlayStyle = {
@@ -222,17 +257,6 @@ function Attendance() {
     boxShadow: "0 20px 60px rgba(0, 0, 0, 0.3)"
   };
 
-  if (loading) {
-    return (
-      <div className="attendance-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading attendance data...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="attendance-container">
       {/* Header */}
@@ -249,6 +273,12 @@ function Attendance() {
             onClick={() => navigate("/attendance-report")}
           >
             <i className="bi bi-file-earmark-pdf"></i> Export Report
+          </button>
+          <button 
+            className="btn-refresh"
+            onClick={fetchAttendance}
+          >
+            <i className="bi bi-arrow-repeat"></i> Refresh
           </button>
         </div>
       </div>
@@ -365,6 +395,14 @@ function Attendance() {
         </div>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <div className="error-message">
+          <i className="bi bi-exclamation-triangle"></i>
+          {error}
+        </div>
+      )}
+
       {/* Attendance Table */}
       <div className="attendance-table-wrapper">
         <div className="table-header">
@@ -410,13 +448,13 @@ function Attendance() {
                       {record.checkOut ? new Date(record.checkOut).toLocaleTimeString() : "—"}
                     </td>
                     <td>
-                      <span className={`status-badge status-${record.status}`}>
+                      <span className={`status-badge status-${record.status?.toLowerCase()}`}>
                         {record.status?.replace("_", " ").toUpperCase()}
                       </span>
                     </td>
                     <td>
                       <div className="action-buttons">
-                        {!record.checkIn && record.status !== "on_leave" && (
+                        {!record.checkIn && record.status?.toUpperCase() !== "ON_LEAVE" && (
                           <button
                             className="btn-check-in"
                             onClick={() => {

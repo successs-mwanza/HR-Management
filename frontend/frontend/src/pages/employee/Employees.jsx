@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ ADD THIS IMPORT
 import "bootstrap-icons/font/bootstrap-icons.css";
 
-
 function EmployeeIndex() {
+  const navigate = useNavigate(); // ✅ ADD THIS
   const [employees, setEmployees] = useState([]);
   const [search, setSearch] = useState("");
 
@@ -52,22 +53,28 @@ function EmployeeIndex() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewEmployee, setViewEmployee] = useState(null);
 
-  useEffect(() => {
-    fetch("http://localhost:8081/api/employees")
-      .then((res) => res.json())
-      .then((data) => {
-        const list = Array.isArray(data)
-          ? data
-          : data.data || data.content || [];
+  // Employee Report Modal state
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportData, setReportData] = useState(null);
+  const [loadingReport, setLoadingReport] = useState(false);
 
-        setEmployees(list);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+  useEffect(() => {
+    fetchEmployees();
   }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch("http://localhost:8081/api/employees");
+      if (!response.ok) throw new Error("Failed to fetch employees");
+      const data = await response.json();
+      const list = Array.isArray(data) ? data : data.data || data.content || [];
+      setEmployees(list);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
 
   // Auto-hide notification after 2 seconds
   useEffect(() => {
@@ -78,6 +85,68 @@ function EmployeeIndex() {
       return () => clearTimeout(timer);
     }
   }, [notification]);
+
+  // Fetch employee report (for the summary modal)
+  const fetchEmployeeReport = async () => {
+    setLoadingReport(true);
+    try {
+      const totalEmployees = employees.length;
+      const activeEmployees = employees.filter(e => e.status === "Active" || !e.status).length;
+      const inactiveEmployees = employees.filter(e => e.status === "Inactive").length;
+      
+      const deptMap = {};
+      employees.forEach(emp => {
+        const dept = emp.department || "Not Specified";
+        if (!deptMap[dept]) {
+          deptMap[dept] = { total: 0, active: 0, inactive: 0 };
+        }
+        deptMap[dept].total++;
+        if (emp.status === "Inactive") {
+          deptMap[dept].inactive++;
+        } else {
+          deptMap[dept].active++;
+        }
+      });
+      
+      const departmentStats = Object.keys(deptMap).map(dept => ({
+        department: dept,
+        total: deptMap[dept].total,
+        active: deptMap[dept].active,
+        inactive: deptMap[dept].inactive
+      }));
+
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const recentHires = employees
+        .filter(emp => {
+          if (!emp.hireDate) return false;
+          const hireDate = new Date(emp.hireDate);
+          return hireDate >= thirtyDaysAgo;
+        })
+        .sort((a, b) => new Date(b.hireDate) - new Date(a.hireDate))
+        .slice(0, 10);
+
+      setReportData({
+        totalEmployees,
+        activeEmployees,
+        inactiveEmployees,
+        totalDepartments: departmentStats.length,
+        departmentStats,
+        recentHires
+      });
+      
+      setShowReportModal(true);
+    } catch (err) {
+      setNotification({
+        show: true,
+        message: "Error generating report: " + err.message,
+        type: "danger"
+      });
+    } finally {
+      setLoadingReport(false);
+    }
+  };
 
   const handleDelete = async () => {
     const id = deleteConfirm.id;
@@ -270,17 +339,14 @@ function EmployeeIndex() {
   const activeCount = employees.filter(e => e.status === "Active" || !e.status).length;
   const inactiveCount = employees.filter(e => e.status === "Inactive").length;
 
-  // Monthly recruitment (based on hireDate)
-  const currentMonth = new Date().getMonth();
-  const currentYear = new Date().getFullYear();
-
   const monthlyRecruitment = employees.filter((e) => {
     if (!e.hireDate) return false;
     const date = new Date(e.hireDate);
-    return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+    return date.getMonth() === new Date().getMonth() && 
+           date.getFullYear() === new Date().getFullYear();
   }).length;
 
-  // Modal overlay style (shared for all modals)
+  // Modal overlay style
   const modalOverlayStyle = {
     position: "fixed",
     top: 0,
@@ -294,43 +360,50 @@ function EmployeeIndex() {
     zIndex: 1050
   };
 
-  // Larger modal dialog styles
   const modalDialogStyleLarge = {
     margin: 0,
     width: "100%",
-    maxWidth: "700px" // Larger for forms
+    maxWidth: "700px"
   };
 
   const modalDialogStyleMedium = {
     margin: 0,
     width: "100%",
-    maxWidth: "500px" // For view profile
+    maxWidth: "500px"
   };
 
   const modalDialogStyleSmall = {
     margin: 0,
     width: "100%",
-    maxWidth: "400px" // For actions/delete
+    maxWidth: "400px"
   };
 
   const modalContentStyle = {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#c5c5c5",
     border: "none",
     borderRadius: "1rem",
-    boxShadow: "0 20px 60px rgba(15, 23, 42, 0.15)"
+    color: "#000000"
   };
 
-  // Get initials for avatar
   const getInitials = (firstName, lastName) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
   return (
-    
     <div className="container employee-page mt-4">
+      {/* HEADER */}
       <div className="employee-header mb-4">
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
           <div>
+            {/* Report Button */}
+            <button
+              className="btn btn-info text-white"
+              onClick={fetchEmployeeReport}
+              disabled={loadingReport}
+            >
+              <i className="bi bi-file-earmark-bar-graph me-1"></i>
+              {loadingReport ? 'Generating...' : 'Employee Report'}
+            </button>
           </div>
           <div className="d-flex flex-wrap gap-2 align-items-center employee-header-actions">
             <div className="search-wrap d-flex align-items-center border rounded-pill px-2 py-1 bg-white shadow-sm">
@@ -357,9 +430,8 @@ function EmployeeIndex() {
         </div>
       </div>
 
+      {/* STATS CARDS */}
       <div className="row mb-3 stats-grid g-3">
-       
-        {/* Total Employees */}
         <div className="col-md-3">
           <div className="card text-white bg-primary shadow-sm">
             <div className="card-body text-center">
@@ -368,8 +440,6 @@ function EmployeeIndex() {
             </div>
           </div>
         </div>
-
-        {/* Active Employees */}
         <div className="col-md-3">
           <div className="card text-white bg-success shadow-sm">
             <div className="card-body text-center">
@@ -378,8 +448,6 @@ function EmployeeIndex() {
             </div>
           </div>
         </div>
-
-        {/* Inactive Employees */}
         <div className="col-md-3">
           <div className="card text-white bg-danger shadow-sm">
             <div className="card-body text-center">
@@ -388,8 +456,6 @@ function EmployeeIndex() {
             </div>
           </div>
         </div>
-
-        {/* Monthly Recruitment */}
         <div className="col-md-3">
           <div className="card text-white bg-warning shadow-sm">
             <div className="card-body text-center">
@@ -429,7 +495,6 @@ function EmployeeIndex() {
                 <th>Actions</th>
               </tr>
             </thead>
-
             <tbody>
               {paginated.length === 0 ? (
                 <tr>
@@ -445,28 +510,18 @@ function EmployeeIndex() {
                         <div className="avatar-circle-sm">{getInitials(emp.firstName, emp.lastName)}</div>
                         <div>
                           <div className="fw-semi">{emp.firstName} {emp.middleName} {emp.lastName}</div>
-                    
                         </div>
                       </div>
                     </td>
                     <td>{emp.department || "N/A"}</td>
                     <td>{emp.position || "N/A"}</td>
                     <td>
-                      <span
-                        className={`badge ${
-                          emp.status === "Inactive"
-                            ? "status-inactive"
-                            : "status-active"
-                        } badge-pill`}
-                      >
+                      <span className={`badge ${emp.status === "Inactive" ? "status-inactive" : "status-active"} badge-pill`}>
                         {emp.status || "Active"}
                       </span>
                     </td>
                     <td>
-                      <button
-                        className="btn btn-sm btn-outline-primary action-btn"
-                        onClick={() => openActionsModal(emp)}
-                      >
+                      <button className="btn btn-sm btn-outline-primary action-btn" onClick={() => openActionsModal(emp)}>
                         <i className="bi bi-three-dots-vertical me-1"></i> Actions
                       </button>
                     </td>
@@ -479,43 +534,29 @@ function EmployeeIndex() {
 
         {/* PAGINATION */}
         <div className="card-footer bg-white border-0 d-flex justify-content-between align-items-center">
-          <button
-            className="btn btn-outline-secondary btn-sm btn-pill"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
-          >
+          <button className="btn btn-outline-secondary btn-sm btn-pill" disabled={currentPage === 1} onClick={() => setCurrentPage(currentPage - 1)}>
             Prev
           </button>
-
-          <span className="text-muted small">
-            Page {currentPage} of {totalPages || 1}
-          </span>
-
-          <button
-            className="btn btn-outline-secondary btn-sm btn-pill"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
-          >
+          <span className="text-muted small">Page {currentPage} of {totalPages || 1}</span>
+          <button className="btn btn-outline-secondary btn-sm btn-pill" disabled={currentPage === totalPages} onClick={() => setCurrentPage(currentPage + 1)}>
             Next
           </button>
         </div>
       </div>
 
-      {/* ADD EMPLOYEE MODAL - Large Form */}
+      {/* ========== ALL MODALS ========== */}
+
+      {/* ADD EMPLOYEE MODAL */}
       {showAddModal && (
         <div style={modalOverlayStyle}>
           <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleLarge}>
             <div className="modal-content" style={modalContentStyle}>
-              <div className="modal-header py-3" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
+              <div className="modal-header py-3" style={{ background: "linear-gradient(135deg, #2943b6 0%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
                 <h5 className="modal-title">
                   <i className="bi bi-person-plus-fill me-2"></i>
                   Add New Employee
                 </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowAddModal(false)}
-                ></button>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowAddModal(false)}></button>
               </div>
               <div className="modal-body py-4 px-4">
                 <form>
@@ -524,125 +565,63 @@ function EmployeeIndex() {
                       <label className="form-label fw-semibold">First Name <span className="text-danger">*</span></label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-person"></i></span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="firstName"
-                          value={formData.firstName}
-                          onChange={handleInputChange}
-                          placeholder="Enter first name"
-                        />
+                        <input type="text" className="form-control" name="firstName" value={formData.firstName} onChange={handleInputChange} placeholder="Enter first name" />
                       </div>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Middle Name</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-person-badge"></i></span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="middleName"
-                          value={formData.middleName}
-                          onChange={handleInputChange}
-                          placeholder="Enter middle name"
-                        />
+                        <input type="text" className="form-control" name="middleName" value={formData.middleName} onChange={handleInputChange} placeholder="Enter middle name" />
                       </div>
                     </div>
                   </div>
-
                   <div className="row g-3 mt-1">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Last Name <span className="text-danger">*</span></label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-person"></i></span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="lastName"
-                          value={formData.lastName}
-                          onChange={handleInputChange}
-                          placeholder="Enter last name"
-                        />
+                        <input type="text" className="form-control" name="lastName" value={formData.lastName} onChange={handleInputChange} placeholder="Enter last name" />
                       </div>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Department</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-building"></i></span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="department"
-                          value={formData.department}
-                          onChange={handleInputChange}
-                          placeholder="Enter department"
-                        />
+                        <input type="text" className="form-control" name="department" value={formData.department} onChange={handleInputChange} placeholder="Enter department" />
                       </div>
                     </div>
                   </div>
-
                   <div className="row g-3 mt-1">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Position</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-briefcase"></i></span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="position"
-                          value={formData.position}
-                          onChange={handleInputChange}
-                          placeholder="Enter position"
-                        />
+                        <input type="text" className="form-control" name="position" value={formData.position} onChange={handleInputChange} placeholder="Enter position" />
                       </div>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Email</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-envelope"></i></span>
-                        <input
-                          type="email"
-                          className="form-control"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder="Enter email"
-                        />
+                        <input type="email" className="form-control" name="email" value={formData.email} onChange={handleInputChange} placeholder="Enter email" />
                       </div>
                     </div>
                   </div>
-
                   <div className="row g-3 mt-1">
                     <div className="col-md-12">
                       <label className="form-label fw-semibold">Phone</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-telephone"></i></span>
-                        <input
-                          type="tel"
-                          className="form-control"
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          placeholder="Enter phone number"
-                        />
+                        <input type="tel" className="form-control" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Enter phone number" />
                       </div>
                     </div>
                   </div>
                 </form>
               </div>
               <div className="modal-footer py-3">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowAddModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleAddEmployee}
-                >
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
+                <button type="button" className="btn btn-primary" onClick={handleAddEmployee}>
                   <i className="bi bi-check-lg me-1"></i> Add Employee
                 </button>
               </div>
@@ -651,28 +630,24 @@ function EmployeeIndex() {
         </div>
       )}
 
-      {/* ACTIONS MODAL */}
+      {/* ACTIONS MODAL - FIXED: Now navigates to employee report */}
       {showActionsModal && selectedEmployee && (
         <div style={modalOverlayStyle}>
           <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleSmall}>
             <div className="modal-content" style={modalContentStyle}>
-              <div className="modal-header py-3 " style={{ background: "linear-gradient(135deg, #667eea 0%, #667eea 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
+              <div className="modal-header py-3" style={{ background: "linear-gradient(135deg, #d3d5df 0%, #e7e0e7 100%)", borderRadius: "1rem 1rem 0 0" }}>
                 <h5 className="modal-title">
                   <i className="bi bi-grid-3x3-gap-fill me-2"></i>
                   Actions
                 </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white "
-                  onClick={() => setShowActionsModal(false)}
-                ></button>
+                <button type="button" className="btn-close" onClick={() => setShowActionsModal(false)}></button>
               </div>
               <div className="modal-body py-4">
-                <div className="text-center mb-3">  
+                <div className="text-center mb-3">
                   <div className="avatar-circle mb-2" style={{
                     width: "70px",
                     height: "70px",
-                    background: "linear-gradient(135deg, #667eea 0%, #667eea  100%)",
+                    background: "linear-gradient(135deg, #c7c9d4 0%, #050505 100%)",
                     borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",
@@ -688,34 +663,29 @@ function EmployeeIndex() {
                   <small className="text-muted">{selectedEmployee.position || "No position"}</small>
                 </div>
                 <div className="d-grid gap-2">
-                  <button
-                    className="btn btn-outline-primary"
-                    onClick={() => openViewModal(selectedEmployee)}
-                  >
+                  <button className="btn btn-outline-primary" onClick={() => openViewModal(selectedEmployee)}>
                     <i className="bi bi-eye me-2"></i> View Profile
                   </button>
-                  <button
-                    className="btn btn-primary"
-                    onClick={() => openEditModal(selectedEmployee)}
-                  >
+                  <button className="btn btn-primary" onClick={() => openEditModal(selectedEmployee)}>
                     <i className="bi bi-pencil-square me-2"></i> Edit Employee
                   </button>
-                  <button
-                    className="btn btn-danger"
-                    onClick={() => openDeleteConfirm(selectedEmployee)}
-                  >
+                  <button className="btn btn-danger" onClick={() => openDeleteConfirm(selectedEmployee)}>
                     <i className="bi bi-trash me-2"></i> Delete Employee
+                  </button>
+                  {/* ✅ FIXED: This now navigates to the dedicated EmployeeReport page */}
+                  <button 
+                    className="btn btn-info text-white" 
+                    onClick={() => {
+                      setShowActionsModal(false);
+                      navigate(`/employee-report/${selectedEmployee.id}`);
+                    }}
+                  >
+                    <i className="bi bi-file-earmark-bar-graph me-2"></i> View Employee Report
                   </button>
                 </div>
               </div>
               <div className="modal-footer py-2 justify-content-center">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowActionsModal(false)}
-                >
-                  Cancel
-                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowActionsModal(false)}>Cancel</button>
               </div>
             </div>
           </div>
@@ -727,23 +697,19 @@ function EmployeeIndex() {
         <div style={modalOverlayStyle}>
           <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleMedium}>
             <div className="modal-content" style={modalContentStyle}>
-              <div className="modal-header py-3  justify-content-center" style={{ background: "linear-gradient(135deg, #667eea 0%, #667eea 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
+              <div className="modal-header py-3" style={{ background: "linear-gradient(135deg, #2943b6 0%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
                 <h5 className="modal-title">
-                  <i className="bi bi-person-circle me-2 justify-content-center"></i>
+                  <i className="bi bi-person-circle me-2"></i>
                   Employee Profile
                 </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setShowViewModal(false)}
-                ></button>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowViewModal(false)}></button>
               </div>
               <div className="modal-body py-4">
                 <div className="text-center mb-4">
                   <div className="avatar-large mb-3" style={{
                     width: "100px",
                     height: "100px",
-                    background: "linear-gradient(135deg, #667eea 0%, #667eea 100%)",
+                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
                     borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",
@@ -761,204 +727,122 @@ function EmployeeIndex() {
                     {viewEmployee.status || "Active"}
                   </span>
                 </div>
-
-                <div className="profile-info-grid">
-                  <div className="row g-3">
-                    <div className="col-md-6">
-                      <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
-                        <small className="text-muted d-block mb-1">
-                          <i className="bi bi-building me-1"></i> Department
-                        </small>
-                        <strong className="fs-6">{viewEmployee.department || "Not specified"}</strong>
-                      </div>
+                <div className="row g-3">
+                  <div className="col-md-6">
+                    <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
+                      <small className="text-muted d-block mb-1"><i className="bi bi-building me-1"></i> Department</small>
+                      <strong className="fs-6">{viewEmployee.department || "Not specified"}</strong>
                     </div>
-                    <div className="col-md-6">
-                      <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
-                        <small className="text-muted d-block mb-1">
-                          <i className="bi bi-briefcase me-1"></i> Position
-                        </small>
-                        <strong className="fs-6">{viewEmployee.position || "Not specified"}</strong>
-                      </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
+                      <small className="text-muted d-block mb-1"><i className="bi bi-briefcase me-1"></i> Position</small>
+                      <strong className="fs-6">{viewEmployee.position || "Not specified"}</strong>
                     </div>
-                    <div className="col-md-6">
-                      <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
-                        <small className="text-muted d-block mb-1">
-                          <i className="bi bi-envelope me-1"></i> Email
-                        </small>
-                        <strong className="fs-6">{viewEmployee.email || "Not specified"}</strong>
-                      </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
+                      <small className="text-muted d-block mb-1"><i className="bi bi-envelope me-1"></i> Email</small>
+                      <strong className="fs-6">{viewEmployee.email || "Not specified"}</strong>
                     </div>
-                    <div className="col-md-6">
-                      <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
-                        <small className="text-muted d-block mb-1">
-                          <i className="bi bi-telephone me-1"></i> Phone
-                        </small>
-                        <strong className="fs-6">{viewEmployee.phone || "Not specified"}</strong>
-                      </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="info-card p-3 rounded" style={{ background: "#f8fafc", borderRadius: "0.75rem" }}>
+                      <small className="text-muted d-block mb-1"><i className="bi bi-telephone me-1"></i> Phone</small>
+                      <strong className="fs-6">{viewEmployee.phone || "Not specified"}</strong>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="modal-footer py-3 justify-content-center">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => {
-                    setShowViewModal(false);
-                    openEditModal(viewEmployee);
-                  }}
-                >
+                <button type="button" className="btn btn-primary" onClick={() => {
+                  setShowViewModal(false);
+                  openEditModal(viewEmployee);
+                }}>
                   <i className="bi bi-pencil-square me-1"></i> Edit Profile
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowViewModal(false)}
-                >
-                  Close
-                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowViewModal(false)}>Close</button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* EDIT EMPLOYEE MODAL - Large Form */}
+      {/* EDIT EMPLOYEE MODAL */}
       {showEditModal && (
         <div style={modalOverlayStyle}>
           <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleLarge}>
             <div className="modal-content" style={modalContentStyle}>
-         <div className="modal-header py-3" style={{ background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
-  <h5 className="modal-title">
-    <i className="bi bi-pencil-square me-2"></i>
-    Edit Employee
-  </h5>
-  <button
-    type="button"
-    className="btn-close btn-close-white ms-auto"
-    onClick={() => setShowEditModal(false)}
-  ></button>
-</div>
-   <div className="modal-body py-4 px-4">
+              <div className="modal-header py-3" style={{ background: "linear-gradient(135deg, #2943b6 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
+                <h5 className="modal-title">
+                  <i className="bi bi-pencil-square me-2"></i>
+                  Edit Employee
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowEditModal(false)}></button>
+              </div>
+              <div className="modal-body py-4 px-4">
                 <form>
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">First Name <span className="text-danger">*</span></label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-person"></i></span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="firstName"
-                          value={editFormData.firstName}
-                          onChange={handleEditInputChange}
-                          placeholder="Enter first name"
-                        />
+                        <input type="text" className="form-control" name="firstName" value={editFormData.firstName} onChange={handleEditInputChange} placeholder="Enter first name" />
                       </div>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Middle Name</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-person-badge"></i></span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="middleName"
-                          value={editFormData.middleName}
-                          onChange={handleEditInputChange}
-                          placeholder="Enter middle name"
-                        />
+                        <input type="text" className="form-control" name="middleName" value={editFormData.middleName} onChange={handleEditInputChange} placeholder="Enter middle name" />
                       </div>
                     </div>
                   </div>
-
                   <div className="row g-3 mt-1">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Last Name <span className="text-danger">*</span></label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-person"></i></span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="lastName"
-                          value={editFormData.lastName}
-                          onChange={handleEditInputChange}
-                          placeholder="Enter last name"
-                        />
+                        <input type="text" className="form-control" name="lastName" value={editFormData.lastName} onChange={handleEditInputChange} placeholder="Enter last name" />
                       </div>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Department</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-building"></i></span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="department"
-                          value={editFormData.department}
-                          onChange={handleEditInputChange}
-                          placeholder="Enter department"
-                        />
+                        <input type="text" className="form-control" name="department" value={editFormData.department} onChange={handleEditInputChange} placeholder="Enter department" />
                       </div>
                     </div>
                   </div>
-
                   <div className="row g-3 mt-1">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Position</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-briefcase"></i></span>
-                        <input
-                          type="text"
-                          className="form-control"
-                          name="position"
-                          value={editFormData.position}
-                          onChange={handleEditInputChange}
-                          placeholder="Enter position"
-                        />
+                        <input type="text" className="form-control" name="position" value={editFormData.position} onChange={handleEditInputChange} placeholder="Enter position" />
                       </div>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Email</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-envelope"></i></span>
-                        <input
-                          type="email"
-                          className="form-control"
-                          name="email"
-                          value={editFormData.email}
-                          onChange={handleEditInputChange}
-                          placeholder="Enter email"
-                        />
+                        <input type="email" className="form-control" name="email" value={editFormData.email} onChange={handleEditInputChange} placeholder="Enter email" />
                       </div>
                     </div>
                   </div>
-
                   <div className="row g-3 mt-1">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Phone</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-telephone"></i></span>
-                        <input
-                          type="tel"
-                          className="form-control"
-                          name="phone"
-                          value={editFormData.phone}
-                          onChange={handleEditInputChange}
-                          placeholder="Enter phone number"
-                        />
+                        <input type="tel" className="form-control" name="phone" value={editFormData.phone} onChange={handleEditInputChange} placeholder="Enter phone number" />
                       </div>
                     </div>
                     <div className="col-md-6">
-                      <label className="italic">Status</label>
+                      <label className="form-label fw-semibold">Status</label>
                       <div className="input-group">
                         <span className="input-group-text"><i className="bi bi-toggle-on"></i></span>
-                        <select
-                          className="form-select"
-                          name="status"
-                          value={editFormData.status}
-                          onChange={handleEditInputChange}
-                        >
+                        <select className="form-select" name="status" value={editFormData.status} onChange={handleEditInputChange}>
                           <option value="Active">Active</option>
                           <option value="Inactive">Inactive</option>
                         </select>
@@ -967,19 +851,9 @@ function EmployeeIndex() {
                   </div>
                 </form>
               </div>
-              <div className="modal-footer py-3  justify-content-center">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setShowEditModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={handleEditEmployee}
-                >
+              <div className="modal-footer py-3">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Cancel</button>
+                <button type="button" className="btn btn-primary" onClick={handleEditEmployee}>
                   <i className="bi bi-check-lg me-1"></i> Update Employee
                 </button>
               </div>
@@ -998,11 +872,7 @@ function EmployeeIndex() {
                   <i className="bi bi-exclamation-triangle-fill me-2"></i>
                   Confirm Delete
                 </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setDeleteConfirm({ show: false, id: null })}
-                ></button>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setDeleteConfirm({ show: false, id: null })}></button>
               </div>
               <div className="modal-body py-4 text-center">
                 <i className="bi bi-trash3-fill" style={{ fontSize: "60px", color: "#dc2626" }}></i>
@@ -1010,19 +880,131 @@ function EmployeeIndex() {
                 <p className="text-danger mb-0 small">This action cannot be undone.</p>
               </div>
               <div className="modal-footer py-3">
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => setDeleteConfirm({ show: false, id: null })}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  onClick={handleDelete}
-                >
+                <button type="button" className="btn btn-secondary" onClick={() => setDeleteConfirm({ show: false, id: null })}>Cancel</button>
+                <button type="button" className="btn btn-danger" onClick={handleDelete}>
                   <i className="bi bi-trash me-1"></i> Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EMPLOYEE REPORT MODAL - FIXED: Removed the extra button */}
+      {showReportModal && reportData && (
+        <div style={modalOverlayStyle}>
+          <div className="modal-dialog modal-dialog-centered" style={modalDialogStyleLarge}>
+            <div className="modal-content" style={modalContentStyle}>
+              <div className="modal-header py-3" style={{ background: "linear-gradient(135deg, #2325b1 100%)", color: "white", borderRadius: "1rem 1rem 0 0" }}>
+                <h5 className="modal-title">
+                  <i className="bi bi-file-earmark-bar-graph me-2"></i>
+                  Employee Report
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setShowReportModal(false)}></button>
+              </div>
+              <div className="modal-body py-4 px-4">
+                {/* Summary Cards */}
+                <div className="row g-3 mb-4">
+                  <div className="col-md-3">
+                    <div className="card bg-primary text-white">
+                      <div className="card-body text-center">
+                        <h6>Total Employees</h6>
+                        <h3>{reportData.totalEmployees}</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="card bg-success text-white">
+                      <div className="card-body text-center">
+                        <h6>Active</h6>
+                        <h3>{reportData.activeEmployees}</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="card bg-danger text-white">
+                      <div className="card-body text-center">
+                        <h6>Inactive</h6>
+                        <h3>{reportData.inactiveEmployees}</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="card bg-warning text-white">
+                      <div className="card-body text-center">
+                        <h6>Departments</h6>
+                        <h3>{reportData.totalDepartments}</h3>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Department-wise breakdown */}
+                <h6 className="fw-bold mb-3">Department-wise Distribution</h6>
+                <div className="table-responsive">
+                  <table className="table table-sm table-bordered">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Department</th>
+                        <th>Total</th>
+                        <th>Active</th>
+                        <th>Inactive</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.departmentStats && reportData.departmentStats.length > 0 ? (
+                        reportData.departmentStats.map((dept, index) => (
+                          <tr key={index}>
+                            <td>{dept.department}</td>
+                            <td>{dept.total}</td>
+                            <td>{dept.active}</td>
+                            <td>{dept.inactive}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="text-center text-muted">No department data available</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Recent hires */}
+                <h6 className="fw-bold mt-4 mb-3">Recent Hires (Last 30 Days)</h6>
+                <div className="table-responsive">
+                  <table className="table table-sm table-bordered">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Position</th>
+                        <th>Hire Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {reportData.recentHires && reportData.recentHires.length > 0 ? (
+                        reportData.recentHires.map((emp, index) => (
+                          <tr key={index}>
+                            <td>{emp.firstName} {emp.lastName}</td>
+                            <td>{emp.department || 'N/A'}</td>
+                            <td>{emp.position || 'N/A'}</td>
+                            <td>{emp.hireDate ? new Date(emp.hireDate).toLocaleDateString() : 'N/A'}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="text-center text-muted">No recent hires</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="modal-footer py-3 justify-content-center">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowReportModal(false)}>Close</button>
+                <button type="button" className="btn btn-primary" onClick={() => window.print()}>
+                  <i className="bi bi-printer me-1"></i> Print Report
                 </button>
               </div>
             </div>
@@ -1041,26 +1023,15 @@ function EmployeeIndex() {
                   {notification.type === "danger" && <i className="bi bi-exclamation-triangle-fill me-2"></i>}
                   {notification.type === "warning" && <i className="bi bi-exclamation-circle-fill me-2"></i>}
                   {notification.type === "success" ? "Success" : 
-                   notification.type === "danger" ? "Error" : 
-                   "Warning"}
+                   notification.type === "danger" ? "Error" : "Warning"}
                 </h5>
-                <button
-                  type="button"
-                  className="btn-close btn-close-white"
-                  onClick={() => setNotification({ show: false, message: "", type: "" })}
-                ></button>
+                <button type="button" className="btn-close btn-close-white" onClick={() => setNotification({ show: false, message: "", type: "" })}></button>
               </div>
               <div className="modal-body text-center py-4">
                 <p className="mb-0">{notification.message}</p>
               </div>
               <div className="modal-footer justify-content-center py-3">
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  onClick={() => setNotification({ show: false, message: "", type: "" })}
-                >
-                  OK
-                </button>
+                <button type="button" className="btn btn-primary" onClick={() => setNotification({ show: false, message: "", type: "" })}>OK</button>
               </div>
             </div>
           </div>
