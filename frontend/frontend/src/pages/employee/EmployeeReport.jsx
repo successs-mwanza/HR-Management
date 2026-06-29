@@ -19,24 +19,27 @@ function EmployeeReport() {
     attendanceRate: 0
   });
 
-  // Date range filter
+  // Filter states
+  const [filterType, setFilterType] = useState("month");
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
     date.setMonth(date.getMonth() - 1);
     return date.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
 
   useEffect(() => {
     if (employeeId) {
       fetchEmployeeDetails();
-      fetchEmployeeAttendance();
+      applyFilter();
     }
-  }, [employeeId, startDate, endDate]);
+  }, [employeeId, filterType, startDate, endDate]);
 
   const fetchEmployeeDetails = async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/employees/${employeeId}`);// getting the employee full report.
+      const response = await fetch(`http://localhost:8081/api/employees/${employeeId}`);
       if (!response.ok) throw new Error("Failed to fetch employee details");
       const data = await response.json();
       setEmployee(data);
@@ -45,11 +48,11 @@ function EmployeeReport() {
     }
   };
 
-  const fetchEmployeeAttendance = async () => {
+  const fetchEmployeeAttendance = async (start, end) => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:8081/api/attendance/employee/${employeeId}?startDate=${startDate}&endDate=${endDate}`
+        `http://localhost:8081/api/attendance/employee/${employeeId}?startDate=${start}&endDate=${end}`
       );
       if (!response.ok) throw new Error("Failed to fetch attendance");
       const data = await response.json();
@@ -80,27 +83,95 @@ function EmployeeReport() {
     });
   };
 
+  const applyFilter = () => {
+    let start = "";
+    let end = "";
+
+    if (filterType === "day") {
+      const today = new Date();
+      start = today.toISOString().split('T')[0];
+      end = today.toISOString().split('T')[0];
+    } else if (filterType === "week") {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
+      start = startDate.toISOString().split('T')[0];
+      end = endDate.toISOString().split('T')[0];
+    } else if (filterType === "month") {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+      start = startDate.toISOString().split('T')[0];
+      end = endDate.toISOString().split('T')[0];
+    } else if (filterType === "year") {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setFullYear(startDate.getFullYear() - 1);
+      start = startDate.toISOString().split('T')[0];
+      end = endDate.toISOString().split('T')[0];
+    } else if (filterType === "custom") {
+      if (customStartDate && customEndDate) {
+        start = customStartDate;
+        end = customEndDate;
+      } else {
+        return;
+      }
+    }
+
+    setStartDate(start);
+    setEndDate(end);
+    fetchEmployeeAttendance(start, end);
+  };
+
+  const handleFilterChange = (type) => {
+    setFilterType(type);
+    if (type === "custom") {
+      if (!customStartDate) {
+        const today = new Date();
+        const monthAgo = new Date();
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        setCustomStartDate(monthAgo.toISOString().split('T')[0]);
+        setCustomEndDate(today.toISOString().split('T')[0]);
+      }
+    }
+  };
+
+  const handleCustomFilterApply = () => {
+    if (customStartDate && customEndDate) {
+      fetchEmployeeAttendance(customStartDate, customEndDate);
+    }
+  };
+
   const getInitials = (firstName, lastName) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
-  const getStatusBadgeClass = (status) => {
-    if (!status) return "secondary";
+  // UPDATED: Better status badge styles with black text
+  const getStatusBadgeStyle = (status) => {
+    if (!status) return { backgroundColor: "#e9ecef", color: "#333333" };
     const upperStatus = status.toUpperCase();
-    if (upperStatus === "PRESENT") return "success";
-    if (upperStatus === "ABSENT") return "danger";
-    if (upperStatus === "LATE") return "warning";
-    if (upperStatus === "ON_LEAVE") return "info";
-    return "secondary";
+    if (upperStatus === "PRESENT") {
+      return { backgroundColor: "#d4edda", color: "#155724", border: "1px solid #c3e6cb" };
+    }
+    if (upperStatus === "ABSENT") {
+      return { backgroundColor: "#f8d7da", color: "#721c24", border: "1px solid #f5c6cb" };
+    }
+    if (upperStatus === "LATE") {
+      return { backgroundColor: "#fff3cd", color: "#856404", border: "1px solid #ffeeba" };
+    }
+    if (upperStatus === "ON_LEAVE") {
+      return { backgroundColor: "#d1ecf1", color: "#0c5460", border: "1px solid #bee5eb" };
+    }
+    return { backgroundColor: "#e9ecef", color: "#333333" };
   };
 
   const getStatusIcon = (status) => {
     if (!status) return "bi-question-circle";
     const upperStatus = status.toUpperCase();
-    if (upperStatus === "PRESENT") return "bi-check-circle";
-    if (upperStatus === "ABSENT") return "bi-x-circle";
-    if (upperStatus === "LATE") return "bi-clock";
-    if (upperStatus === "ON_LEAVE") return "bi-calendar-plus";
+    if (upperStatus === "PRESENT") return "bi-check-circle-fill";
+    if (upperStatus === "ABSENT") return "bi-x-circle-fill";
+    if (upperStatus === "LATE") return "bi-clock-fill";
+    if (upperStatus === "ON_LEAVE") return "bi-calendar-plus-fill";
     return "bi-question-circle";
   };
 
@@ -122,8 +193,15 @@ function EmployeeReport() {
     });
   };
 
-  const handleDateRangeChange = () => {
-    fetchEmployeeAttendance();
+  const getFilterLabel = () => {
+    switch(filterType) {
+      case "day": return "Today";
+      case "week": return "Last 7 Days";
+      case "month": return "Last 30 Days";
+      case "year": return "Last Year";
+      case "custom": return "Custom Range";
+      default: return "Custom";
+    }
   };
 
   if (loading && !employee) {
@@ -162,16 +240,17 @@ function EmployeeReport() {
   }
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#f8f9fa", minHeight: "100vh" }}>
+    <div className="container-fluid py-4" style={{ backgroundColor: "#ffffff", minHeight: "100vh" }}>
       {/* Header with Back Button */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <button 
           className="btn btn-outline-secondary"
           onClick={() => navigate(-1)}
+          style={{ color: "#333333", borderColor: "#cccccc" }}
         >
           <i className="bi bi-arrow-left me-1"></i> Back to Employees
         </button>
-        <h4 className="mb-0 fw-bold">
+        <h4 className="mb-0 fw-bold" style={{ color: "#1a1a2e" }}>
           <i className="bi bi-file-earmark-person text-primary me-2"></i>
           Employee Attendance Report
         </h4>
@@ -179,14 +258,14 @@ function EmployeeReport() {
       </div>
 
       {/* Employee Profile Card */}
-      <div className="card shadow-sm mb-4">
+      <div className="card shadow-sm mb-4" style={{ backgroundColor: "#ffffff", border: "1px solid #e0e0e0" }}>
         <div className="card-body">
           <div className="row align-items-center">
             <div className="col-md-2 text-center">
               <div className="avatar-large" style={{
                 width: "100px",
                 height: "100px",
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                background: "linear-gradient(135deg, #4a4a6a 0%, #2d2d44 100%)",
                 borderRadius: "50%",
                 display: "flex",
                 alignItems: "center",
@@ -195,7 +274,7 @@ function EmployeeReport() {
                 fontSize: "40px",
                 fontWeight: "bold",
                 color: "white",
-                boxShadow: "0 4px 15px rgba(102, 126, 234, 0.3)"
+                boxShadow: "0 4px 15px rgba(0, 0, 0, 0.15)"
               }}>
                 {getInitials(employee.firstName, employee.lastName)}
               </div>
@@ -203,22 +282,22 @@ function EmployeeReport() {
             <div className="col-md-10">
               <div className="row">
                 <div className="col-md-6">
-                  <h4 className="fw-bold mb-1" style={{ color: "#000000" }}>
+                  <h4 className="fw-bold mb-1" style={{ color: "#1a1a2e" }}>
                     {employee.firstName} {employee.middleName} {employee.lastName}
                   </h4>
-                  <p className="text-muted mb-2">
-                    <i className="bi bi-briefcase me-1"></i> {employee.position || "No position"}
+                  <p className="mb-2" style={{ color: "#555555" }}>
+                    <i className="bi bi-briefcase me-1" style={{ color: "#666666" }}></i> {employee.position || "No position"}
                   </p>
-                  <p className="text-muted mb-0">
-                    <i className="bi bi-building me-1"></i> {employee.department || "No department"}
+                  <p className="mb-0" style={{ color: "#555555" }}>
+                    <i className="bi bi-building me-1" style={{ color: "#666666" }}></i> {employee.department || "No department"}
                   </p>
                 </div>
                 <div className="col-md-6">
-                  <p className="mb-1" style={{ color: "#000000" }}>
-                    <i className="bi bi-envelope me-1"></i> {employee.email || "No email"}
+                  <p className="mb-1" style={{ color: "#333333" }}>
+                    <i className="bi bi-envelope me-1" style={{ color: "#666666" }}></i> {employee.email || "No email"}
                   </p>
-                  <p className="mb-1" style={{ color: "#000000" }}>
-                    <i className="bi bi-telephone me-1"></i> {employee.phone || "No phone"}
+                  <p className="mb-1" style={{ color: "#333333" }}>
+                    <i className="bi bi-telephone me-1" style={{ color: "#666666" }}></i> {employee.phone || "No phone"}
                   </p>
                   <p className="mb-0">
                     <span className={`badge ${employee.status === "Inactive" ? "bg-danger" : "bg-success"} px-3 py-2`}>
@@ -232,37 +311,92 @@ function EmployeeReport() {
         </div>
       </div>
 
-      {/* Date Range Filter */}
-      <div className="card shadow-sm mb-4">
+      {/* Filter Section */}
+      <div className="card shadow-sm mb-4" style={{ backgroundColor: "#ffffff", border: "1px solid #e0e0e0" }}>
         <div className="card-body">
-          <div className="row g-3 align-items-end">
-            <div className="col-md-4">
-              <label className="form-label fw-semibold" style={{ color: "#000000" }}>Start Date</label>
-              <input
-                type="date"
-                className="form-control"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                style={{ color: "#000000" }}
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label fw-semibold" style={{ color: "#000000" }}>End Date</label>
-              <input
-                type="date"
-                className="form-control"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                style={{ color: "#000000" }}
-              />
-            </div>
-            <div className="col-md-4">
-              <button 
-                className="btn btn-primary w-100"
-                onClick={handleDateRangeChange}
+          <div className="row g-3">
+            <div className="col-md-3">
+              <label className="form-label fw-semibold" style={{ color: "#333333" }}>Filter By</label>
+              <select 
+                className="form-select" 
+                value={filterType} 
+                onChange={(e) => handleFilterChange(e.target.value)}
+                style={{ color: "#333333", backgroundColor: "#ffffff", borderColor: "#cccccc" }}
               >
-                <i className="bi bi-search me-1"></i> Apply Filter
-              </button>
+                <option value="day">Today</option>
+                <option value="week">Last 7 Days</option>
+                <option value="month">Last 30 Days</option>
+                <option value="year">Last Year</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+
+            {filterType === "custom" && (
+              <>
+                <div className="col-md-3">
+                  <label className="form-label fw-semibold" style={{ color: "#333333" }}>Start Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    style={{ color: "#333333", backgroundColor: "#ffffff", borderColor: "#cccccc" }}
+                  />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label fw-semibold" style={{ color: "#333333" }}>End Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    style={{ color: "#333333", backgroundColor: "#ffffff", borderColor: "#cccccc" }}
+                  />
+                </div>
+                <div className="col-md-3 d-flex align-items-end">
+                  <button 
+                    className="btn btn-primary w-100"
+                    onClick={handleCustomFilterApply}
+                    style={{ backgroundColor: "#4a4a6a", borderColor: "#4a4a6a" }}
+                  >
+                    <i className="bi bi-search me-1"></i> Apply Custom Filter
+                  </button>
+                </div>
+              </>
+            )}
+
+            {filterType !== "custom" && (
+              <div className="col-md-3 d-flex align-items-end">
+                <button 
+                  className="btn btn-primary w-100"
+                  onClick={applyFilter}
+                  style={{ backgroundColor: "#4a4a6a", borderColor: "#4a4a6a" }}
+                >
+                  <i className="bi bi-search me-1"></i> Apply {getFilterLabel()}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Show current filter info */}
+          <div className="mt-3 pt-2 border-top" style={{ borderColor: "#e0e0e0 !important" }}>
+            <div className="d-flex flex-wrap gap-3">
+              <span className="badge py-2 px-3" style={{ backgroundColor: "#4a4a6a", color: "#ffffff" }}>
+                <i className="bi bi-calendar-range me-1"></i> 
+                {filterType === "day" ? "Today" :
+                 filterType === "week" ? "Last 7 Days" :
+                 filterType === "month" ? "Last 30 Days" :
+                 filterType === "year" ? "Last Year" :
+                 "Custom Range"}
+              </span>
+              <span className="badge py-2 px-3" style={{ backgroundColor: "#6c6c8a", color: "#ffffff" }}>
+                <i className="bi bi-calendar-start me-1"></i> 
+                From: {formatDate(startDate)}
+              </span>
+              <span className="badge py-2 px-3" style={{ backgroundColor: "#6c6c8a", color: "#ffffff" }}>
+                <i className="bi bi-calendar-end me-1"></i> 
+                To: {formatDate(endDate)}
+              </span>
             </div>
           </div>
         </div>
@@ -271,65 +405,67 @@ function EmployeeReport() {
       {/* Statistics Cards */}
       <div className="row g-3 mb-4">
         <div className="col-md-2">
-          <div className="card bg-primary text-white shadow-sm">
+          <div className="card shadow-sm" style={{ backgroundColor: "#4a4a6a", border: "none" }}>
             <div className="card-body text-center">
-              <h6>Total Days</h6>
-              <h3 className="mb-0">{stats.totalDays}</h3>
+              <h6 style={{ color: "rgba(255,255,255,0.8)" }}>Total Days</h6>
+              <h3 className="mb-0" style={{ color: "#ffffff", fontWeight: "bold" }}>{stats.totalDays}</h3>
             </div>
           </div>
         </div>
         <div className="col-md-2">
-          <div className="card bg-success text-white shadow-sm">
+          <div className="card shadow-sm" style={{ backgroundColor: "#28a745", border: "none" }}>
             <div className="card-body text-center">
-              <h6>Present</h6>
-              <h3 className="mb-0">{stats.presentDays}</h3>
+              <h6 style={{ color: "rgba(255,255,255,0.8)" }}>Present</h6>
+              <h3 className="mb-0" style={{ color: "#ffffff", fontWeight: "bold" }}>{stats.presentDays}</h3>
             </div>
           </div>
         </div>
         <div className="col-md-2">
-          <div className="card bg-danger text-white shadow-sm">
+          <div className="card shadow-sm" style={{ backgroundColor: "#dc3545", border: "none" }}>
             <div className="card-body text-center">
-              <h6>Absent</h6>
-              <h3 className="mb-0">{stats.absentDays}</h3>
+              <h6 style={{ color: "rgba(255,255,255,0.8)" }}>Absent</h6>
+              <h3 className="mb-0" style={{ color: "#ffffff", fontWeight: "bold" }}>{stats.absentDays}</h3>
             </div>
           </div>
         </div>
         <div className="col-md-2">
-          <div className="card bg-warning text-white shadow-sm">
+          <div className="card shadow-sm" style={{ backgroundColor: "#ffc107", border: "none" }}>
             <div className="card-body text-center">
-              <h6>Late</h6>
-              <h3 className="mb-0">{stats.lateDays}</h3>
+              <h6 style={{ color: "rgba(0,0,0,0.7)" }}>Late</h6>
+              <h3 className="mb-0" style={{ color: "#000000", fontWeight: "bold" }}>{stats.lateDays}</h3>
             </div>
           </div>
         </div>
         <div className="col-md-2">
-          <div className="card bg-info text-white shadow-sm">
+          <div className="card shadow-sm" style={{ backgroundColor: "#17a2b8", border: "none" }}>
             <div className="card-body text-center">
-              <h6>On Leave</h6>
-              <h3 className="mb-0">{stats.leaveDays}</h3>
+              <h6 style={{ color: "rgba(255,255,255,0.8)" }}>On Leave</h6>
+              <h3 className="mb-0" style={{ color: "#ffffff", fontWeight: "bold" }}>{stats.leaveDays}</h3>
             </div>
           </div>
         </div>
         <div className="col-md-2">
-          <div className="card bg-dark text-white shadow-sm">
+          <div className="card shadow-sm" style={{ backgroundColor: "#343a40", border: "none" }}>
             <div className="card-body text-center">
-              <h6>Attendance Rate</h6>
-              <h3 className="mb-0">{stats.attendanceRate.toFixed(1)}%</h3>
+              <h6 style={{ color: "rgba(255,255,255,0.8)" }}>Attendance Rate</h6>
+              <h3 className="mb-0" style={{ color: "#ffffff", fontWeight: "bold" }}>{stats.attendanceRate.toFixed(1)}%</h3>
             </div>
           </div>
         </div>
       </div>
 
       {/* Attendance Table */}
-      <div className="card shadow-sm">
-        <div className="card-header bg-white d-flex justify-content-between align-items-center">
-          <h5 className="mb-0 fw-bold" style={{ color: "#000000" }}>
-            <i className="bi bi-table me-2 text-primary"></i>
-            Attendance Records
-          </h5>
-          <span className="badge bg-light text-dark">
-            {attendance.length} records found
-          </span>
+      <div className="card shadow-sm" style={{ backgroundColor: "#ffffff", border: "1px solid #e0e0e0" }}>
+        <div className="card-header" style={{ backgroundColor: "#f8f9fa", borderBottom: "1px solid #e0e0e0" }}>
+          <div className="d-flex justify-content-between align-items-center">
+            <h5 className="mb-0 fw-bold" style={{ color: "#1a1a2e" }}>
+              <i className="bi bi-table me-2 text-primary"></i>
+              Attendance Records ({getFilterLabel()})
+            </h5>
+            <span className="badge" style={{ backgroundColor: "#e9ecef", color: "#333333" }}>
+              {attendance.length} records found
+            </span>
+          </div>
         </div>
         <div className="card-body p-0">
           {loading ? (
@@ -339,89 +475,95 @@ function EmployeeReport() {
               </div>
             </div>
           ) : attendance.length === 0 ? (
-            <div className="text-center py-5 text-muted">
-              <i className="bi bi-inbox fs-1 d-block mb-2"></i>
-              No attendance records found for this period
+            <div className="text-center py-5">
+              <i className="bi bi-inbox fs-1 d-block mb-2" style={{ color: "#999999" }}></i>
+              <p style={{ color: "#666666" }}>No attendance records found for {getFilterLabel().toLowerCase()}</p>
             </div>
           ) : (
             <div className="table-responsive">
               <table className="table table-hover mb-0">
-                <thead className="table-light">
+                <thead style={{ backgroundColor: "#f8f9fa" }}>
                   <tr>
-                    <th style={{ color: "#000000" }}>#</th>
-                    <th style={{ color: "#000000" }}>Date</th>
-                    <th style={{ color: "#000000" }}>Status</th>
-                    <th style={{ color: "#000000" }}>Check In</th>
-                    <th style={{ color: "#000000" }}>Check Out</th>
-                    <th style={{ color: "#000000" }}>Location</th>
-                    <th style={{ color: "#000000" }}>Reason</th>
+                    <th style={{ color: "#333333", fontWeight: "600" }}>#</th>
+                    <th style={{ color: "#333333", fontWeight: "600" }}>Date</th>
+                    <th style={{ color: "#333333", fontWeight: "600" }}>Status</th>
+                    <th style={{ color: "#333333", fontWeight: "600" }}>Check In</th>
+                    <th style={{ color: "#333333", fontWeight: "600" }}>Check Out</th>
+                    <th style={{ color: "#333333", fontWeight: "600" }}>Location</th>
+                    <th style={{ color: "#333333", fontWeight: "600" }}>Reason</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {attendance.map((record, index) => (
-                    <tr key={record.id || index}>
-                      <td style={{ color: "#000000" }}>{index + 1}</td>
-                      <td style={{ color: "#000000" }}>
-                        <strong>{formatDate(record.date)}</strong>
-                      </td>
-                      <td>
-                        <span className={`badge bg-${getStatusBadgeClass(record.status)} px-3 py-2`}>
-                          <i className={`bi ${getStatusIcon(record.status)} me-1`}></i>
-                          {record.status || "N/A"}
-                        </span>
-                      </td>
-                      <td style={{ color: "#000000" }}>
-                        {record.checkIn ? formatTime(record.checkIn) : "-"}
-                      </td>
-                      <td style={{ color: "#000000" }}>
-                        {record.checkOut ? formatTime(record.checkOut) : "-"}
-                      </td>
-                      <td>
-                        <span className="badge bg-light text-dark">
-                          <i className="bi bi-geo-alt me-1"></i>
-                          {record.checkInLocation || record.location || "N/A"}
-                        </span>
-                      </td>
-                      <td style={{ color: "#000000" }}>
-                        {record.reason || "-"}
-                      </td>
-                    </tr>
-                  ))}
+                  {attendance.map((record, index) => {
+                    const statusStyle = getStatusBadgeStyle(record.status);
+                    return (
+                      <tr key={record.id || index}>
+                        <td style={{ color: "#333333" }}>{index + 1}</td>
+                        <td style={{ color: "#333333" }}>
+                          <strong>{formatDate(record.date)}</strong>
+                        </td>
+                        <td>
+                          <span className="badge px-3 py-2" style={statusStyle}>
+                            <i className={`bi ${getStatusIcon(record.status)} me-1`}></i>
+                            {record.status || "N/A"}
+                          </span>
+                        </td>
+                        <td style={{ color: "#333333" }}>
+                          {record.checkIn ? formatTime(record.checkIn) : "-"}
+                        </td>
+                        <td style={{ color: "#333333" }}>
+                          {record.checkOut ? formatTime(record.checkOut) : "-"}
+                        </td>
+                        <td>
+                          <span className="badge" style={{ backgroundColor: "#f0f0f0", color: "#333333" }}>
+                            <i className="bi bi-geo-alt me-1"></i>
+                            {record.checkInLocation || record.location || "N/A"}
+                          </span>
+                        </td>
+                        <td style={{ color: "#333333" }}>
+                          {record.reason || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
         </div>
-        <div className="card-footer bg-white d-flex justify-content-between align-items-center">
-          <span className="text-muted small">
-            Showing {attendance.length} records from {formatDate(startDate)} to {formatDate(endDate)}
-          </span>
-          <div className="d-flex gap-2">
-            <button 
-              className="btn btn-sm btn-success"
-              onClick={() => {
-                // Export to CSV
-                let csv = "Date,Status,Check In,Check Out,Location,Reason\n";
-                attendance.forEach(record => {
-                  csv += `${formatDate(record.date)},${record.status || "N/A"},${record.checkIn ? formatTime(record.checkIn) : "-"},${record.checkOut ? formatTime(record.checkOut) : "-"},${record.checkInLocation || record.location || "N/A"},${record.reason || "-"}\n`;
-                });
-                const blob = new Blob([csv], { type: 'text/csv' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `${employee.firstName}_${employee.lastName}_attendance.csv`;
-                a.click();
-                window.URL.revokeObjectURL(url);
-              }}
-            >
-              <i className="bi bi-download me-1"></i> Export CSV
-            </button>
-            <button 
-              className="btn btn-sm btn-primary"
-              onClick={() => window.print()}
-            >
-              <i className="bi bi-printer me-1"></i> Print
-            </button>
+        <div className="card-footer" style={{ backgroundColor: "#f8f9fa", borderTop: "1px solid #e0e0e0" }}>
+          <div className="d-flex justify-content-between align-items-center">
+            <span style={{ color: "#666666", fontSize: "14px" }}>
+              Showing {attendance.length} records from {formatDate(startDate)} to {formatDate(endDate)}
+            </span>
+            <div className="d-flex gap-2">
+              <button 
+                className="btn btn-sm" 
+                style={{ backgroundColor: "#28a745", color: "#ffffff", border: "none" }}
+                onClick={() => {
+                  let csv = "Date,Status,Check In,Check Out,Location,Reason\n";
+                  attendance.forEach(record => {
+                    csv += `${formatDate(record.date)},${record.status || "N/A"},${record.checkIn ? formatTime(record.checkIn) : "-"},${record.checkOut ? formatTime(record.checkOut) : "-"},${record.checkInLocation || record.location || "N/A"},${record.reason || "-"}\n`;
+                  });
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${employee.firstName}_${employee.lastName}_attendance.csv`;
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                }}
+              >
+                <i className="bi bi-download me-1"></i> Export CSV
+              </button>
+              <button 
+                className="btn btn-sm btn-primary"
+                onClick={() => window.print()}
+                style={{ backgroundColor: "#4a4a6a", borderColor: "#4a4a6a" }}
+              >
+                <i className="bi bi-printer me-1"></i> Print
+              </button>
+            </div>
           </div>
         </div>
       </div>

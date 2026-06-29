@@ -709,7 +709,7 @@ function EmployeeIndex() {
                   <div className="avatar-large mb-3" style={{
                     width: "100px",
                     height: "100px",
-                    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: "linear-gradient(135deg, #667eea 0%)",
                     borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",

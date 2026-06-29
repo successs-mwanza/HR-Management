@@ -10,6 +10,7 @@ const getPageTitle = (pathname) => {
   if (pathname.startsWith("/invoice")) return "Financial Management";
   if (pathname.startsWith("/payslip")) return "Financial Management";
   if (pathname.startsWith("/income-expenses")) return "Financial Management";
+ 
   return "";
 };
 
