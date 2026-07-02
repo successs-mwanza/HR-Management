@@ -40,7 +40,7 @@ public class AttendanceController {
         return ResponseEntity.ok(attendanceService.getAttendanceByDate(date));
     }
     
-    @GetMapping("/filtered")
+    @GetMapping("/filtered") 
     public ResponseEntity<List<Attendance>> getFilteredAttendance(
             @RequestParam String date,
             @RequestParam(required = false) String status,
