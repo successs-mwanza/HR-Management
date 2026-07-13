@@ -7,7 +7,6 @@ import hrLogo from "./human-resource-logo-design-inspiration-vector-illustration
 function Sidebar({ sidebarOpen, setSidebarOpen }) {
   const [openIndex, setOpenIndex] = useState(null);
   const [userFirstName, setUserFirstName] = useState("");
-  const [userFullName, setUserFullName] = useState("");
   const location = useLocation();
 
   const menu = [
@@ -18,7 +17,8 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       icon: "bi bi-people",
       children: [
         { name: "Employee", icon: "bi bi-person", link: "/employees" },
-      
+        { name: "Productivity Monitoring", icon: "bi bi-speedometer2", link: "/productivity" },
+        { name: "Leave Management", icon: "bi bi-calendar-check", link: "/leave" },
       ]
     },
 
@@ -41,7 +41,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
       children: [
         { name: "Sales Reports", icon: "bi bi-bar-chart", link: "/sales-reports" },
         { name: "Performance Analytics", icon: "bi bi-pie-chart", link: "/performance-analytics" },
-        { name: "Employee Reports", icon: "bi bi-people", link: "/employee-reports" },
+  
         { name: "Financial Reports", icon: "bi bi-cash-coin", link: "/financial-reports" },
       ]
     },
@@ -58,7 +58,6 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     // Get username from localStorage
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
-      setUserFullName(storedUsername);
       const firstName = storedUsername.split(" ")[0];
       setUserFirstName(firstName);
     }
@@ -77,13 +76,11 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
         })
         .then(data => {
           if (data.name) {
-            setUserFullName(data.name);
             const firstName = data.name.split(" ")[0];
             setUserFirstName(firstName);
             localStorage.setItem("username", data.name);
           } else if (data.firstName) {
             setUserFirstName(data.firstName);
-            setUserFullName(`${data.firstName} ${data.lastName || ""}`);
             localStorage.setItem("username", `${data.firstName} ${data.lastName || ""}`);
           }
         })

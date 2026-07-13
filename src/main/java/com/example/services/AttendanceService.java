@@ -12,9 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.DTO.AttendanceRequest;
 import com.example.DTO.AttendanceStatsDTO;
 import com.example.DTO.StatusUpdateRequest;
-import com.example.Model.Attendance;
-import com.example.Model.AttendanceStatus;
-import com.example.Model.Employee;
+import com.example.Entity.Attendance;
+import com.example.Entity.AttendanceStatus;
+import com.example.Entity.Employee;
 import com.example.repository.AttendanceRepository;
 import com.example.repository.EmployeeRepository;
 

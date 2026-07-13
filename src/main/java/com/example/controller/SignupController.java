@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.Model.SignUp;
+import com.example.Entity.SignUp;
 import com.example.repository.SignUpRepository;
 import com.example.security.JwtUtil;
 

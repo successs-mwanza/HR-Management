@@ -1,6 +1,6 @@
 package com.example.controller;
 
-import com.example.Model.Income_Expense;
+import com.example.Entity.Income_Expense;
 import com.example.repository.IncomeExpenseRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;

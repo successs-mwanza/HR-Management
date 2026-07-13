@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.Model.Payroll;  // Import your Payroll entity
+import com.example.Entity.Payroll;  // Import your Payroll entity
 import com.example.repository.PayrollRepository;
 
 @RestController

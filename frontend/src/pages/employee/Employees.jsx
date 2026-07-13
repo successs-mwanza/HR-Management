@@ -390,22 +390,26 @@ function EmployeeIndex() {
   };
 
   return (
-    <div className="container employee-page mt-4">
-      {/* HEADER */}
-      <div className="employee-header mb-4">
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+    <div className="container employee-page py-4">
+      <div className="page-hero mb-4">
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
           <div>
-            {/* Report Button */}
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <span className="hero-badge"><i className="bi bi-people-fill"></i></span>
+              <span className="text-muted fw-semibold small">HR Operations</span>
+            </div>
+            <h2 className="fw-bold mb-1">Employee management</h2>
+            <p className="text-muted mb-0">Keep your team directory organized, searchable, and easy to update.</p>
+          </div>
+          <div className="d-flex flex-wrap gap-2 align-items-center employee-header-actions">
             <button
-              className="btn btn-info text-white"
+              className="btn btn-outline-info btn-pill"
               onClick={fetchEmployeeReport}
               disabled={loadingReport}
             >
               <i className="bi bi-file-earmark-bar-graph me-1"></i>
               {loadingReport ? 'Generating...' : 'Employee Report'}
             </button>
-          </div>
-          <div className="d-flex flex-wrap gap-2 align-items-center employee-header-actions">
             <div className="search-wrap d-flex align-items-center border rounded-pill px-2 py-1 bg-white shadow-sm">
               <i className="bi bi-search text-secondary"></i>
               <input
@@ -430,52 +434,62 @@ function EmployeeIndex() {
         </div>
       </div>
 
-      {/* STATS CARDS */}
-      <div className="row mb-3 stats-grid g-3">
+      <div className="row mb-4 stats-grid g-3">
         <div className="col-md-3">
-          <div className="card text-white bg-primary shadow-sm">
-            <div className="card-body text-center">
-              <h6>Total Employees</h6>
-              <h3>{employees.length}</h3>
+          <div className="card stat-card stat-card-primary text-white shadow-sm">
+            <div className="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <p className="mb-1 small fw-semibold text-white-50">Total Employees</p>
+                <h3 className="mb-0">{employees.length}</h3>
+              </div>
+              <div className="stat-icon"><i className="bi bi-people-fill"></i></div>
             </div>
           </div>
         </div>
         <div className="col-md-3">
-          <div className="card text-white bg-success shadow-sm">
-            <div className="card-body text-center">
-              <h6>Active Employees</h6>
-              <h3>{activeCount}</h3>
+          <div className="card stat-card stat-card-success text-white shadow-sm">
+            <div className="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <p className="mb-1 small fw-semibold text-white-50">Active Employees</p>
+                <h3 className="mb-0">{activeCount}</h3>
+              </div>
+              <div className="stat-icon"><i className="bi bi-person-check-fill"></i></div>
             </div>
           </div>
         </div>
         <div className="col-md-3">
-          <div className="card text-white bg-danger shadow-sm">
-            <div className="card-body text-center">
-              <h6>Inactive Employees</h6>
-              <h3>{inactiveCount}</h3>
+          <div className="card stat-card stat-card-danger text-white shadow-sm">
+            <div className="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <p className="mb-1 small fw-semibold text-white-50">Inactive Employees</p>
+                <h3 className="mb-0">{inactiveCount}</h3>
+              </div>
+              <div className="stat-icon"><i className="bi bi-person-x-fill"></i></div>
             </div>
           </div>
         </div>
         <div className="col-md-3">
-          <div className="card text-white bg-warning shadow-sm">
-            <div className="card-body text-center">
-              <h6>Monthly Recruitment</h6>
-              <h3>{monthlyRecruitment}</h3>
+          <div className="card stat-card stat-card-warning shadow-sm">
+            <div className="card-body d-flex justify-content-between align-items-center">
+              <div>
+                <p className="mb-1 small fw-semibold text-dark-50">Monthly Recruitment</p>
+                <h3 className="mb-0">{monthlyRecruitment}</h3>
+              </div>
+              <div className="stat-icon"><i className="bi bi-calendar2-week-fill"></i></div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* MAIN CARD */}
-      <div className="card dashboard-card shadow-sm">
+      <div className="card dashboard-card shadow-sm border-0">
         <div className="card-header bg-white border-0 pb-0">
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-3">
             <div>
-              <h5 className="mb-1 fw-bold">Employee Management</h5>
-              <p className="text-muted small mb-0">Browse your employee roster and access actions for each team member.</p>
+              <h5 className="mb-1 fw-bold">Employee directory</h5>
+              <p className="text-muted small mb-0">Browse your roster and manage each person with a few simple actions.</p>
             </div>
             <div className="d-flex flex-wrap gap-2 align-items-center">
-              <span className="badge bg-light text-dark py-2 px-3 shadow-sm">Total: {employees.length}</span>
+              <span className="badge bg-light text-dark py-2 px-3 shadow-sm">Showing {paginated.length} of {filtered.length}</span>
               <button className="btn btn-outline-secondary btn-sm btn-pill" onClick={() => setCurrentPage(1)}>
                 Reset Filters
               </button>

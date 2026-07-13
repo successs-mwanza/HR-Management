@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
@@ -30,14 +30,7 @@ function EmployeeReport() {
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
 
-  useEffect(() => {
-    if (employeeId) {
-      fetchEmployeeDetails();
-      applyFilter();
-    }
-  }, [employeeId, filterType, startDate, endDate]);
-
-  const fetchEmployeeDetails = async () => {
+  const fetchEmployeeDetails = useCallback(async () => {
     try {
       const response = await fetch(`http://localhost:8081/api/employees/${employeeId}`);
       if (!response.ok) throw new Error("Failed to fetch employee details");
@@ -46,25 +39,7 @@ function EmployeeReport() {
     } catch (err) {
       setError(err.message);
     }
-  };
-
-  const fetchEmployeeAttendance = async (start, end) => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `http://localhost:8081/api/attendance/employee/${employeeId}?startDate=${start}&endDate=${end}`
-      );
-      if (!response.ok) throw new Error("Failed to fetch attendance");
-      const data = await response.json();
-      setAttendance(data);
-      calculateStats(data);
-      setError(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [employeeId]);
 
   const calculateStats = (data) => {
     const totalDays = data.length;
@@ -83,7 +58,25 @@ function EmployeeReport() {
     });
   };
 
-  const applyFilter = () => {
+  const fetchEmployeeAttendance = useCallback(async (start, end) => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `http://localhost:8081/api/attendance/employee/${employeeId}?startDate=${start}&endDate=${end}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch attendance");
+      const data = await response.json();
+      setAttendance(data);
+      calculateStats(data);
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [employeeId]);
+
+  const applyFilter = useCallback(() => {
     let start = "";
     let end = "";
 
@@ -121,7 +114,14 @@ function EmployeeReport() {
     setStartDate(start);
     setEndDate(end);
     fetchEmployeeAttendance(start, end);
-  };
+  }, [customEndDate, customStartDate, fetchEmployeeAttendance, filterType]);
+
+  useEffect(() => {
+    if (employeeId) {
+      fetchEmployeeDetails();
+      applyFilter();
+    }
+  }, [employeeId, fetchEmployeeDetails, applyFilter]);
 
   const handleFilterChange = (type) => {
     setFilterType(type);
@@ -151,10 +151,10 @@ function EmployeeReport() {
     if (!status) return { backgroundColor: "#e9ecef", color: "#333333" };
     const upperStatus = status.toUpperCase();
     if (upperStatus === "PRESENT") {
-      return { backgroundColor: "#d4edda", color: "#155724", border: "1px solid #c3e6cb" };
+      return { backgroundColor: "#d4edda", color: "#36b654", border: "1px solid #c3e6cb" };
     }
     if (upperStatus === "ABSENT") {
-      return { backgroundColor: "#f8d7da", color: "#721c24", border: "1px solid #f5c6cb" };
+      return { backgroundColor: "#f8d7da", color: "#b41625", border: "1px solid #f5c6cb" };
     }
     if (upperStatus === "LATE") {
       return { backgroundColor: "#fff3cd", color: "#856404", border: "1px solid #ffeeba" };
@@ -240,25 +240,30 @@ function EmployeeReport() {
   }
 
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: "#ffffff", minHeight: "100vh" }}>
-      {/* Header with Back Button */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <button 
-          className="btn btn-outline-secondary"
-          onClick={() => navigate(-1)}
-          style={{ color: "#333333", borderColor: "#cccccc" }}
-        >
-          <i className="bi bi-arrow-left me-1"></i> Back to Employees
-        </button>
-        <h4 className="mb-0 fw-bold" style={{ color: "#1a1a2e" }}>
-          <i className="bi bi-file-earmark-person text-primary me-2"></i>
-          Employee Attendance Report
-        </h4>
-        <div></div>
+    <div className="container-fluid py-4 employee-report-page">
+      <div className="page-hero mb-4">
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
+          <div className="d-flex align-items-start gap-3">
+            <div className="hero-icon"><i className="bi bi-file-earmark-person-fill"></i></div>
+            <div>
+              <div className="d-flex align-items-center gap-2 mb-2">
+                <span className="hero-badge"><i className="bi bi-shield-check"></i></span>
+                <span className="text-muted fw-semibold small">Attendance overview</span>
+              </div>
+              <h4 className="fw-bold mb-1">Employee attendance report</h4>
+              <p className="text-muted mb-0">Review attendance patterns with a clear and friendly overview.</p>
+            </div>
+          </div>
+          <button 
+            className="btn btn-outline-secondary btn-pill"
+            onClick={() => navigate(-1)}
+          >
+            <i className="bi bi-arrow-left me-1"></i> Back to Employees
+          </button>
+        </div>
       </div>
 
-      {/* Employee Profile Card */}
-      <div className="card shadow-sm mb-4" style={{ backgroundColor: "#ffffff", border: "1px solid #e0e0e0" }}>
+      <div className="card shadow-sm mb-4 report-profile-card">
         <div className="card-body">
           <div className="row align-items-center">
             <div className="col-md-2 text-center">
@@ -301,7 +306,7 @@ function EmployeeReport() {
                   </p>
                   <p className="mb-0">
                     <span className={`badge ${employee.status === "Inactive" ? "bg-danger" : "bg-success"} px-3 py-2`}>
-                      {employee.status || "Active"}
+                      
                     </span>
                   </p>
                 </div>
@@ -311,8 +316,7 @@ function EmployeeReport() {
         </div>
       </div>
 
-      {/* Filter Section */}
-      <div className="card shadow-sm mb-4" style={{ backgroundColor: "#ffffff", border: "1px solid #e0e0e0" }}>
+      <div className="card shadow-sm mb-4 filter-panel">
         <div className="card-body">
           <div className="row g-3">
             <div className="col-md-3">
@@ -402,60 +406,58 @@ function EmployeeReport() {
         </div>
       </div>
 
-      {/* Statistics Cards */}
       <div className="row g-3 mb-4">
         <div className="col-md-2">
-          <div className="card shadow-sm" style={{ backgroundColor: "#4a4a6a", border: "none" }}>
+          <div className="card shadow-sm report-stat-card report-stat-card-dark">
             <div className="card-body text-center">
-              <h6 style={{ color: "rgba(255,255,255,0.8)" }}>Total Days</h6>
-              <h3 className="mb-0" style={{ color: "#ffffff", fontWeight: "bold" }}>{stats.totalDays}</h3>
+              <h6>Total Days</h6>
+              <h3 className="mb-0">{stats.totalDays}</h3>
             </div>
           </div>
         </div>
         <div className="col-md-2">
-          <div className="card shadow-sm" style={{ backgroundColor: "#28a745", border: "none" }}>
+          <div className="card shadow-sm report-stat-card report-stat-card-success">
             <div className="card-body text-center">
-              <h6 style={{ color: "rgba(255,255,255,0.8)" }}>Present</h6>
-              <h3 className="mb-0" style={{ color: "#ffffff", fontWeight: "bold" }}>{stats.presentDays}</h3>
+              <h6>Present</h6>
+              <h3 className="mb-0">{stats.presentDays}</h3>
             </div>
           </div>
         </div>
         <div className="col-md-2">
-          <div className="card shadow-sm" style={{ backgroundColor: "#dc3545", border: "none" }}>
+          <div className="card shadow-sm report-stat-card report-stat-card-danger">
             <div className="card-body text-center">
-              <h6 style={{ color: "rgba(255,255,255,0.8)" }}>Absent</h6>
-              <h3 className="mb-0" style={{ color: "#ffffff", fontWeight: "bold" }}>{stats.absentDays}</h3>
+              <h6>Absent</h6>
+              <h3 className="mb-0">{stats.absentDays}</h3>
             </div>
           </div>
         </div>
         <div className="col-md-2">
-          <div className="card shadow-sm" style={{ backgroundColor: "#ffc107", border: "none" }}>
+          <div className="card shadow-sm report-stat-card report-stat-card-warning">
             <div className="card-body text-center">
-              <h6 style={{ color: "rgba(0,0,0,0.7)" }}>Late</h6>
-              <h3 className="mb-0" style={{ color: "#000000", fontWeight: "bold" }}>{stats.lateDays}</h3>
+              <h6>Late</h6>
+              <h3 className="mb-0">{stats.lateDays}</h3>
             </div>
           </div>
         </div>
         <div className="col-md-2">
-          <div className="card shadow-sm" style={{ backgroundColor: "#17a2b8", border: "none" }}>
+          <div className="card shadow-sm report-stat-card report-stat-card-info">
             <div className="card-body text-center">
-              <h6 style={{ color: "rgba(255,255,255,0.8)" }}>On Leave</h6>
-              <h3 className="mb-0" style={{ color: "#ffffff", fontWeight: "bold" }}>{stats.leaveDays}</h3>
+              <h6>On Leave</h6>
+              <h3 className="mb-0">{stats.leaveDays}</h3>
             </div>
           </div>
         </div>
         <div className="col-md-2">
-          <div className="card shadow-sm" style={{ backgroundColor: "#343a40", border: "none" }}>
+          <div className="card shadow-sm report-stat-card report-stat-card-dark">
             <div className="card-body text-center">
-              <h6 style={{ color: "rgba(255,255,255,0.8)" }}>Attendance Rate</h6>
-              <h3 className="mb-0" style={{ color: "#ffffff", fontWeight: "bold" }}>{stats.attendanceRate.toFixed(1)}%</h3>
+              <h6>Attendance Rate</h6>
+              <h3 className="mb-0">{stats.attendanceRate.toFixed(1)}%</h3>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Attendance Table */}
-      <div className="card shadow-sm" style={{ backgroundColor: "#ffffff", border: "1px solid #e0e0e0" }}>
+      <div className="card shadow-sm report-table-card">
         <div className="card-header" style={{ backgroundColor: "#f8f9fa", borderBottom: "1px solid #e0e0e0" }}>
           <div className="d-flex justify-content-between align-items-center">
             <h5 className="mb-0 fw-bold" style={{ color: "#1a1a2e" }}>

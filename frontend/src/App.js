@@ -19,6 +19,7 @@ import DashboardCRM from "./MainDashboard/dashboardCRM";
 import Payslip from "./pages/finance/payroll/payslip";
 import EmployeeReport from "./pages/employee/EmployeeReport"
 import Employees from "./pages/employee/Employees";
+import  ProductivityMonitoring from "./pages/employee/Productivity_Monitoring";
 
 
 function Layout() {
@@ -51,7 +52,8 @@ function Layout() {
             <Route path="/signup" element={<Signup />} />
             <Route path="/employees" element={<Employees />} /> 
             <Route path="/dashboard" element={<DashboardCRM />} />
-            
+            <Route path="/productivity" element={<ProductivityMonitoring />} />
+
             {/* Employee Report Route - with employeeId parameter */}
             <Route path="/employee-report/:employeeId" element={<EmployeeReport />} />
 

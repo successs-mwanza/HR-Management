@@ -18,6 +18,7 @@ services:
       start_period: 10s
 
   backend:
+    image: hr-management-backend:v1.0   #for changing image version backend
     build:
       context: .
       dockerfile: dockerfile
@@ -38,6 +39,7 @@ services:
     restart: unless-stopped
 
   frontend:
+    image: hr-management-frontend:v1.0  #for changing image version frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile

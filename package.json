@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "bootstrap-icons": "^1.13.1",
-    "fonts": "^0.0.2"
+    "fonts": "^0.0.2",
+    "lucide-react": "^1.23.0",
+    "recharts": "^3.9.2"
   }
 }

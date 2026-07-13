@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.DTO.AttendanceRequest;
 import com.example.DTO.AttendanceStatsDTO;
 import com.example.DTO.StatusUpdateRequest;
-import com.example.Model.Attendance;
+import com.example.Entity.Attendance;
 import com.example.services.AttendanceService;
 
 import jakarta.validation.Valid;

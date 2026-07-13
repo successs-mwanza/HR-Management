@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.Model.Invoice;
+import com.example.Entity.Invoice;
 import com.example.repository.InvoiceRepository;
 import com.example.services.InvoiceNumberGenerator;
 
