@@ -57,9 +57,7 @@ public class ProductivityMonitoringService {
         }
 
         entry.setTimeSpent((int) Math.round(entry.getHoursWorked() * 60));
-        entry.setProductivityRate(entry.getGoalsAssigned() > 0
-                ? Math.round((entry.getGoalsCompleted() * 100f) / entry.getGoalsAssigned())
-                : 0);
+        entry.setProductivityRate(entry.getGoalsAssigned() > 0 ? Math.round((entry.getGoalsCompleted() * 100f) / entry.getGoalsAssigned()): 0);
         if (entry.getQualityScore() < 0) {
             entry.setQualityScore(0);
         }

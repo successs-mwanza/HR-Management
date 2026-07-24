@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,
@@ -10,11 +9,7 @@ import {
   AlertCircle, Users, Target, Zap 
 } from "lucide-react";
 
-function ProductivityMonitoring() {
-  const location = useLocation();
-  const selectedEmployeeName = location.state?.employeeName;
-  const selectedEmployeeId = location.state?.employeeId;
-
+function EmployeeProductivityMonitoring() {
   // State Management
   const [productivityData, setProductivityData] = useState([]);
   const [currentEntry, setCurrentEntry] = useState({
@@ -742,4 +737,4 @@ function ProductivityMonitoring() {
   );
 }
 
-export default ProductivityMonitoring;
+export default EmployeeProductivityMonitoring; 

@@ -1,243 +1,333 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, LineChart, Line
+  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,
+  AreaChart, Area
 } from "recharts";
 
-function ProductivityMonitor() {
+const API_BASE_URL = "http://localhost:8081/api/leave-management";
+
+function LeaveManagement() {
   // State Management
-  const [productivityData, setProductivityData] = useState([]);
-  const [currentEntry, setCurrentEntry] = useState({
-    date: new Date().toISOString().split('T')[0],
-    hoursWorked: '',
-    goalsAssigned: '',
-    goalsCompleted: '',
-    qualityScore: '',
-    notes: ""
-  });
-  const [filter, setFilter] = useState("week");
-  const [showForm, setShowForm] = useState(false);
-  const [editingEntry, setEditingEntry] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [leaveRequests, setLeaveRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Calculate statistics from current data
-  const calculateStatistics = () => {
-    const filteredData = getFilteredData();
-    
-    if (filteredData.length === 0) {
-      return {
-        totalHours: 0,
-        totalGoalsAssigned: 0,
-        totalGoalsCompleted: 0,
-        averageQuality: 0,
-        completionRate: 0,
-        efficiency: 0,
-        totalEntries: 0
-      };
+  useEffect(() => {
+    fetchLeaveRequests();
+  }, []);
+
+  const fetchLeaveRequests = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(API_BASE_URL);
+      if (!response.ok) {
+        throw new Error("Failed to fetch leave records");
+      }
+      const data = await response.json();
+      setLeaveRequests(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const totalHours = filteredData.reduce((sum, d) => sum + parseFloat(d.hoursWorked), 0);
-    const totalGoalsAssigned = filteredData.reduce((sum, d) => sum + parseInt(d.goalsAssigned), 0);
-    const totalGoalsCompleted = filteredData.reduce((sum, d) => sum + parseInt(d.goalsCompleted), 0);
-    const averageQuality = Math.round(filteredData.reduce((sum, d) => sum + parseInt(d.qualityScore), 0) / filteredData.length);
-    const completionRate = totalGoalsAssigned > 0 ? Math.round((totalGoalsCompleted / totalGoalsAssigned) * 100) : 0;
-    const efficiency = totalHours > 0 ? Math.round((totalGoalsCompleted / totalHours) * 10) / 10 : 0;
+  const [currentLeave, setCurrentLeave] = useState({
+    employeeName: "",
+    department: "",
+    leaveType: "Annual",
+    startDate: "",
+    endDate: "",
+    reason: "",
+    status: "Pending",
+    appliedDate: "",
+    approved: "0",
+    pending: "1",
+    rejected: "0",
+    totalRequest: 1,
+    totalDays: 0
+  });
+
+  const [filter, setFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [editingLeave, setEditingLeave] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Statistics
+  const getStatistics = () => {
+    const totalRequests = leaveRequests.length;
+    const approved = leaveRequests.filter(l => l.status === "Approved").length;
+    const pending = leaveRequests.filter(l => l.status === "Pending").length;
+    const rejected = leaveRequests.filter(l => l.status === "Rejected").length;
+    const cancelled = leaveRequests.filter(l => l.status === "Cancelled").length;
+    
+    const totalDays = leaveRequests.reduce((sum, l) => sum + l.totalDays, 0);
+    const approvedDays = leaveRequests.filter(l => l.status === "Approved")
+      .reduce((sum, l) => sum + l.totalDays, 0);
+
+    // Department breakdown
+    const deptStats = {};
+    leaveRequests.forEach(l => {
+      if (!deptStats[l.department]) {
+        deptStats[l.department] = { total: 0, approved: 0, pending: 0, rejected: 0 };
+      }
+      deptStats[l.department].total++;
+      if (l.status === "Approved") deptStats[l.department].approved++;
+      if (l.status === "Pending") deptStats[l.department].pending++;
+      if (l.status === "Rejected") deptStats[l.department].rejected++;
+    });
+
+    // Leave type breakdown
+    const leaveTypeStats = {};
+    leaveRequests.forEach(l => {
+      if (!leaveTypeStats[l.leaveType]) {
+        leaveTypeStats[l.leaveType] = { total: 0, approved: 0 };
+      }
+      leaveTypeStats[l.leaveType].total++;
+      if (l.status === "Approved") leaveTypeStats[l.leaveType].approved++;
+    });
 
     return {
-      totalHours,
-      totalGoalsAssigned,
-      totalGoalsCompleted,
-      averageQuality,
-      completionRate,
-      efficiency,
-      totalEntries: filteredData.length
+      totalRequests,
+      approved,
+      pending,
+      rejected,
+      cancelled,
+      totalDays,
+      approvedDays,
+      deptStats,
+      leaveTypeStats,
+      approvalRate: totalRequests > 0 ? Math.round((approved / totalRequests) * 100) : 0,
+      pendingRate: totalRequests > 0 ? Math.round((pending / totalRequests) * 100) : 0
     };
   };
 
-  // Get filtered data based on selected filter
+  const stats = getStatistics();
+
+  // Filtered data
   const getFilteredData = () => {
-    const today = new Date();
-    let startDate = new Date();
+    let filtered = leaveRequests;
     
-    switch(filter) {
-      case "week":
-        startDate.setDate(today.getDate() - 7);
-        break;
-      case "month":
-        startDate.setMonth(today.getMonth() - 1);
-        break;
-      case "year":
-        startDate.setFullYear(today.getFullYear() - 1);
-        break;
-      default:
-        startDate.setDate(today.getDate() - 30);
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(l => l.status === statusFilter);
     }
     
-    const startStr = startDate.toISOString().split('T')[0];
+    if (filter === "thisMonth") {
+      const today = new Date();
+      const month = today.getMonth();
+      const year = today.getFullYear();
+      filtered = filtered.filter(l => {
+        const date = new Date(l.startDate);
+        return date.getMonth() === month && date.getFullYear() === year;
+      });
+    } else if (filter === "lastMonth") {
+      const today = new Date();
+      const month = today.getMonth() - 1;
+      const year = today.getFullYear();
+      filtered = filtered.filter(l => {
+        const date = new Date(l.startDate);
+        return date.getMonth() === month && date.getFullYear() === year;
+      });
+    } else if (filter === "upcoming") {
+      const today = new Date().toISOString().split('T')[0];
+      filtered = filtered.filter(l => l.startDate >= today && l.status === "Pending");
+    }
     
-    let filtered = productivityData.filter(d => d.date >= startStr);
-    
-    // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(d => 
-        d.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.date.includes(searchTerm)
+      filtered = filtered.filter(l => 
+        l.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        l.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        l.leaveType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        l.reason.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
     return filtered;
   };
 
+  const filteredData = getFilteredData();
+
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation
-    if (!currentEntry.date || !currentEntry.hoursWorked || !currentEntry.goalsAssigned || 
-        !currentEntry.goalsCompleted || !currentEntry.qualityScore) {
-      alert("Please fill all required fields");
-      return;
-    }
-
-    const newEntry = {
-      id: editingEntry ? editingEntry.id : Date.now().toString(),
-      date: currentEntry.date,
-      hoursWorked: parseFloat(currentEntry.hoursWorked),
-      goalsAssigned: parseInt(currentEntry.goalsAssigned),
-      goalsCompleted: parseInt(currentEntry.goalsCompleted),
-      qualityScore: parseInt(currentEntry.qualityScore),
-      productivityRate: currentEntry.goalsAssigned > 0 
-        ? Math.round((parseInt(currentEntry.goalsCompleted) / parseInt(currentEntry.goalsAssigned)) * 100) 
-        : 0,
-      notes: currentEntry.notes || ""
+    const totalDays = calculateDays(currentLeave.startDate, currentLeave.endDate);
+    const normalizedStatus = editingLeave ? currentLeave.status : "Pending";
+    const payload = {
+      employeeName: currentLeave.employeeName,
+      department: currentLeave.department,
+      leaveType: currentLeave.leaveType,
+      startDate: currentLeave.startDate,
+      endDate: currentLeave.endDate,
+      totalDays,
+      status: normalizedStatus,
+      reason: currentLeave.reason,
+      appliedDate: editingLeave ? currentLeave.appliedDate : new Date().toISOString().split('T')[0],
+      approved: normalizedStatus === "Approved" ? "1" : "0",
+      pending: normalizedStatus === "Pending" ? "1" : "0",
+      rejected: normalizedStatus === "Rejected" ? "1" : "0",
+      totalRequest: 1
     };
 
-    if (editingEntry) {
-      // Update existing entry
-      setProductivityData(prev => 
-        prev.map(entry => entry.id === editingEntry.id ? newEntry : entry)
-      );
-    } else {
-      // Add new entry
-      setProductivityData(prev => [newEntry, ...prev]);
-    }
+    try {
+      const url = editingLeave ? `${API_BASE_URL}/${editingLeave.id}` : API_BASE_URL;
+      const response = await fetch(url, {
+        method: editingLeave ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
 
-    resetForm();
-    setShowForm(false);
-    setEditingEntry(null);
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(errorBody || (editingLeave ? "Failed to update leave request" : "Failed to create leave request"));
+      }
+
+      const saved = await response.json();
+      if (editingLeave) {
+        setLeaveRequests(prev => prev.map(l => l.id === saved.id ? saved : l));
+      } else {
+        setLeaveRequests(prev => [...prev, saved]);
+      }
+
+      resetForm();
+      setShowForm(false);
+      setEditingLeave(null);
+      setError(null);
+    } catch (err) {
+      setError(err.message || "Unable to save leave request");
+    }
+  };
+
+  // Calculate days
+  const calculateDays = (start, end) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    return Math.floor((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
   };
 
   // Reset form
   const resetForm = () => {
-    setCurrentEntry({
-      date: new Date().toISOString().split('T')[0],
-      hoursWorked: '',
-      goalsAssigned: '',
-      goalsCompleted: '',
-      qualityScore: '',
-      notes: ""
+    setCurrentLeave({
+      employeeName: "",
+      department: "",
+      leaveType: "Annual",
+      startDate: "",
+      endDate: "",
+      reason: "",
+      status: "Pending",
+      appliedDate: "",
+      approved: "0",
+      pending: "1",
+      rejected: "0",
+      totalRequest: 1,
+      totalDays: 0
     });
   };
 
   // Handle edit
-  const handleEdit = (entry) => {
-    setEditingEntry(entry);
-    setCurrentEntry({
-      date: entry.date,
-      hoursWorked: entry.hoursWorked.toString(),
-      goalsAssigned: entry.goalsAssigned.toString(),
-      goalsCompleted: entry.goalsCompleted.toString(),
-      qualityScore: entry.qualityScore.toString(),
-      notes: entry.notes || ""
+  const handleEdit = (leave) => {
+    setEditingLeave(leave);
+    setCurrentLeave({
+      employeeName: leave.employeeName,
+      department: leave.department,
+      leaveType: leave.leaveType,
+      startDate: leave.startDate,
+      endDate: leave.endDate,
+      reason: leave.reason,
+      status: leave.status || "Pending",
+      appliedDate: leave.appliedDate || "",
+      approved: leave.approved || "0",
+      pending: leave.pending || "0",
+      rejected: leave.rejected || "0",
+      totalRequest: leave.totalRequest || 1,
+      totalDays: leave.totalDays || 0
     });
     setShowForm(true);
   };
 
   // Handle delete
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this entry?")) {
-      setProductivityData(prev => prev.filter(entry => entry.id !== id));
-    }
-  };
-
-  // Export data as CSV
-  const exportCSV = () => {
-    if (productivityData.length === 0) {
-      alert("No data to export");
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this leave request?")) {
       return;
     }
 
-    const headers = ["Date", "Hours Worked", "Goals Assigned", "Goals Completed", "Quality Score", "Productivity Rate", "Notes"];
-    const rows = productivityData.map(d => [
-      d.date,
-      d.hoursWorked,
-      d.goalsAssigned,
-      d.goalsCompleted,
-      d.qualityScore,
-      d.productivityRate || Math.round((d.goalsCompleted / d.goalsAssigned) * 100),
-      d.notes || ""
-    ]);
-    
-    const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `productivity_data_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-  };
+    try {
+      const response = await fetch(`${API_BASE_URL}/${id}`, {
+        method: "DELETE"
+      });
 
-  // Import data from CSV
-  const importCSV = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const text = event.target.result;
-        const lines = text.split('\n').filter(line => line.trim());
-        const headers = lines[0].split(',');
-        
-        const importedData = lines.slice(1).map(line => {
-          const values = line.split(',');
-          return {
-            id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-            date: values[0] || new Date().toISOString().split('T')[0],
-            hoursWorked: parseFloat(values[1]) || 0,
-            goalsAssigned: parseInt(values[2]) || 0,
-            goalsCompleted: parseInt(values[3]) || 0,
-            qualityScore: parseInt(values[4]) || 0,
-            productivityRate: parseInt(values[5]) || 0,
-            notes: values[6] || ""
-          };
-        });
-        
-        setProductivityData(prev => [...importedData, ...prev]);
-        alert(`Successfully imported ${importedData.length} entries!`);
-      } catch (error) {
-        alert("Error importing CSV: " + error.message);
+      if (!response.ok) {
+        throw new Error("Failed to delete leave request");
       }
-    };
-    reader.readAsText(file);
-    e.target.value = ''; // Reset file input
-  };
 
-  // Clear all data
-  const clearAllData = () => {
-    if (window.confirm("Are you sure you want to clear all data? This cannot be undone!")) {
-      setProductivityData([]);
+      setLeaveRequests(prev => prev.filter(l => l.id !== id));
+    } catch (err) {
+      setError(err.message);
     }
   };
 
-  // Prepare chart data
-  const chartData = getFilteredData().map(d => ({
-    ...d,
-    date: new Date(d.date).toLocaleDateString(),
-    productivityRate: d.productivityRate || Math.round((d.goalsCompleted / d.goalsAssigned) * 100)
-  }));
+  // Update status
+  const updateStatus = async (id, newStatus) => {
+    try {
+      const leave = leaveRequests.find(l => l.id === id);
+      if (!leave) {
+        throw new Error("Leave request not found");
+      }
 
-  const stats = calculateStatistics();
+      if (newStatus === "Approved") {
+        const response = await fetch(`${API_BASE_URL}/${id}/approve?days=${leave.totalDays}`, {
+          method: "POST"
+        });
+        if (!response.ok) {
+          throw new Error("Failed to approve leave request");
+        }
+      } else if (newStatus === "Rejected") {
+        const response = await fetch(`${API_BASE_URL}/${id}/reject`, {
+          method: "POST"
+        });
+        if (!response.ok) {
+          throw new Error("Failed to reject leave request");
+        }
+      }
+
+      await fetchLeaveRequests();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // Chart data
+  const statusChartData = [
+    { name: "Approved", value: stats.approved },
+    { name: "Pending", value: stats.pending },
+    { name: "Rejected", value: stats.rejected },
+    { name: "Cancelled", value: stats.cancelled }
+  ];
+
+  const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#9CA3AF'];
+
+  const monthlyTrendData = [
+    { month: 'Jan', leaves: 5 },
+    { month: 'Feb', leaves: 8 },
+    { month: 'Mar', leaves: 3 },
+    { month: 'Apr', leaves: 6 },
+    { month: 'May', leaves: 4 },
+    { month: 'Jun', leaves: 7 }
+  ];
+
+  // Department chart data
+  const deptChartData = Object.entries(stats.deptStats).map(([dept, data]) => ({
+    name: dept,
+    total: data.total,
+    approved: data.approved,
+    pending: data.pending,
+    rejected: data.rejected
+  }));
 
   // Styles
   const styles = {
@@ -274,7 +364,7 @@ function ProductivityMonitor() {
     },
     statsGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
       gap: "1rem",
       marginTop: "1.5rem"
     },
@@ -283,7 +373,7 @@ function ProductivityMonitor() {
       padding: "1.25rem",
       borderRadius: "12px",
       border: "1px solid #e5e7eb",
-      transition: "transform 0.2s, box-shadow 0.2s",
+      transition: "transform 0.2s",
       cursor: "pointer"
     }),
     statValue: {
@@ -299,19 +389,6 @@ function ProductivityMonitor() {
       display: "flex",
       alignItems: "center",
       gap: "0.5rem"
-    },
-    chartContainer: {
-      backgroundColor: "white",
-      padding: "1.5rem",
-      borderRadius: "12px",
-      boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-      marginBottom: "1.5rem"
-    },
-    chartTitle: {
-      fontSize: "1.125rem",
-      fontWeight: "600",
-      color: "#1f2937",
-      margin: "0 0 1rem 0"
     },
     filterSection: {
       display: "flex",
@@ -339,6 +416,25 @@ function ProductivityMonitor() {
       marginLeft: "auto",
       minWidth: "200px"
     },
+    chartContainer: {
+      backgroundColor: "white",
+      padding: "1.5rem",
+      borderRadius: "12px",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+      marginBottom: "1.5rem"
+    },
+    chartTitle: {
+      fontSize: "1.125rem",
+      fontWeight: "600",
+      color: "#1f2937",
+      margin: "0 0 1rem 0"
+    },
+    chartGrid: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: "1.5rem",
+      marginBottom: "1.5rem"
+    },
     tableContainer: {
       backgroundColor: "white",
       borderRadius: "12px",
@@ -349,7 +445,7 @@ function ProductivityMonitor() {
     table: {
       width: "100%",
       borderCollapse: "collapse",
-      minWidth: "700px"
+      minWidth: "900px"
     },
     th: {
       textAlign: "left",
@@ -367,19 +463,52 @@ function ProductivityMonitor() {
       fontSize: "0.875rem",
       color: "#1f2937"
     },
-    badge: (type) => ({
+    badge: (status) => ({
       display: "inline-block",
       padding: "0.25rem 0.75rem",
       borderRadius: "20px",
       fontSize: "0.75rem",
       fontWeight: "600",
-      backgroundColor: type === "completed" ? "#dcfce7" : 
-                      type === "inProgress" ? "#fef3c7" : 
-                      type === "review" ? "#ede9fe" : "#fee2e2",
-      color: type === "completed" ? "#166534" : 
-             type === "inProgress" ? "#92400e" : 
-             type === "review" ? "#5b21b6" : "#991b1b"
+      backgroundColor: status === "Approved" ? "#dcfce7" : 
+                      status === "Pending" ? "#fef3c7" : 
+                      status === "Rejected" ? "#fee2e2" : "#f3f4f6",
+      color: status === "Approved" ? "#166534" : 
+             status === "Pending" ? "#92400e" : 
+             status === "Rejected" ? "#991b1b" : "#6b7280"
     }),
+    statusButton: (bgColor) => ({
+      padding: "0.25rem 0.75rem",
+      backgroundColor: bgColor,
+      color: "white",
+      border: "none",
+      borderRadius: "6px",
+      fontSize: "0.75rem",
+      cursor: "pointer",
+      marginRight: "0.25rem",
+      transition: "all 0.2s"
+    }),
+    button: {
+      padding: "0.5rem 1.5rem",
+      backgroundColor: "#3b82f6",
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      fontWeight: "500",
+      cursor: "pointer",
+      transition: "all 0.2s",
+      fontSize: "0.875rem"
+    },
+    buttonDanger: {
+      padding: "0.5rem 1.5rem",
+      backgroundColor: "#ef4444",
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      fontWeight: "500",
+      cursor: "pointer",
+      transition: "all 0.2s",
+      fontSize: "0.875rem"
+    },
     formOverlay: {
       position: "fixed",
       top: 0,
@@ -420,58 +549,16 @@ function ProductivityMonitor() {
       fontSize: "0.875rem",
       transition: "border 0.2s"
     },
-    button: {
-      padding: "0.5rem 1.5rem",
-      backgroundColor: "#3b82f6",
-      color: "white",
-      border: "none",
-      borderRadius: "8px",
-      fontWeight: "500",
-      cursor: "pointer",
-      transition: "all 0.2s",
-      fontSize: "0.875rem"
-    },
-    buttonDanger: {
-      padding: "0.5rem 1.5rem",
-      backgroundColor: "#ef4444",
-      color: "white",
-      border: "none",
-      borderRadius: "8px",
-      fontWeight: "500",
-      cursor: "pointer",
-      transition: "all 0.2s",
-      fontSize: "0.875rem",
-      marginLeft: "0.5rem"
-    },
-    buttonSecondary: {
-      padding: "0.5rem 1.5rem",
-      backgroundColor: "#9ca3af",
-      color: "white",
-      border: "none",
-      borderRadius: "8px",
-      fontWeight: "500",
-      cursor: "pointer",
-      transition: "all 0.2s",
-      fontSize: "0.875rem"
-    },
-    buttonSuccess: {
-      padding: "0.5rem 1.5rem",
-      backgroundColor: "#10b981",
-      color: "white",
-      border: "none",
-      borderRadius: "8px",
-      fontWeight: "500",
-      cursor: "pointer",
-      transition: "all 0.2s",
-      fontSize: "0.875rem"
+    formActions: {
+      display: "flex",
+      gap: "0.75rem",
+      justifyContent: "flex-end",
+      marginTop: "1.5rem"
     },
     emptyState: {
       textAlign: "center",
       padding: "3rem",
       color: "#9ca3af"
-    },
-    fileInput: {
-      display: "none"
     }
   };
 
@@ -481,111 +568,88 @@ function ProductivityMonitor() {
       <div style={styles.header}>
         <div style={styles.headerTop}>
           <h1 style={styles.title}>
-            <i className="bi bi-graph-up-arrow" style={{ fontSize: "2rem", color: "#3b82f6" }}></i>
-            Productivity Monitor
+            <i className="bi bi-calendar-check" style={{ fontSize: "2rem", color: "#3b82f6" }}></i>
+            Leave Management
           </h1>
           <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
             <button style={styles.button} onClick={() => setShowForm(true)}>
-              <i className="bi bi-plus-lg"></i> Add Entry
-            </button>
-            <button style={styles.buttonSuccess} onClick={exportCSV}>
-              <i className="bi bi-download"></i> Export CSV
-            </button>
-            <label style={{...styles.buttonSuccess, cursor: "pointer"}}>
-              <i className="bi bi-upload"></i> Import CSV
-              <input 
-                type="file" 
-                accept=".csv" 
-                style={styles.fileInput} 
-                onChange={importCSV}
-              />
-            </label>
-            <button style={styles.buttonDanger} onClick={clearAllData}>
-              <i className="bi bi-trash"></i> Clear All
+              <i className="bi bi-plus-lg"></i> New Leave Request
             </button>
           </div>
         </div>
 
         {/* Stats Grid */}
         <div style={styles.statsGrid}>
-          <div 
-            style={styles.statCard("#eff6ff")}
-            onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-            onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-          >
+          <div style={styles.statCard("#eff6ff")}>
             <p style={styles.statLabel}>
-              <i className="bi bi-clock" style={{ color: "#3b82f6" }}></i> Total Hours
+              <i className="bi bi-file-text" style={{ color: "#3b82f6" }}></i> Total Requests
             </p>
-            <p style={styles.statValue}>{stats.totalHours.toFixed(1)}h</p>
+            <p style={styles.statValue}>{stats.totalRequests}</p>
           </div>
-          <div 
-            style={styles.statCard("#f0fdf4")}
-            onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-            onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-          >
+          <div style={styles.statCard("#f0fdf4")}>
             <p style={styles.statLabel}>
-              <i className="bi bi-bullseye" style={{ color: "#10b981" }}></i> Goals Completed
+              <i className="bi bi-check-circle" style={{ color: "#10b981" }}></i> Approved
             </p>
-            <p style={styles.statValue}>{stats.totalGoalsCompleted}/{stats.totalGoalsAssigned}</p>
+            <p style={styles.statValue}>{stats.approved}</p>
           </div>
-          <div 
-            style={styles.statCard("#fef3c7")}
-            onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-            onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-          >
+          <div style={styles.statCard("#fef3c7")}>
             <p style={styles.statLabel}>
-              <i className="bi bi-trophy" style={{ color: "#f59e0b" }}></i> Quality Score
+              <i className="bi bi-clock" style={{ color: "#f59e0b" }}></i> Pending
             </p>
-            <p style={styles.statValue}>{stats.averageQuality}%</p>
+            <p style={styles.statValue}>{stats.pending}</p>
           </div>
-          <div 
-            style={styles.statCard("#ede9fe")}
-            onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-            onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-          >
+          <div style={styles.statCard("#fee2e2")}>
             <p style={styles.statLabel}>
-              <i className="bi bi-lightning" style={{ color: "#8b5cf6" }}></i> Efficiency
+              <i className="bi bi-x-circle" style={{ color: "#ef4444" }}></i> Rejected
             </p>
-            <p style={styles.statValue}>{stats.efficiency} goals/h</p>
+            <p style={styles.statValue}>{stats.rejected}</p>
           </div>
-          <div 
-            style={styles.statCard("#fce4ec")}
-            onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-            onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-          >
+          <div style={styles.statCard("#f3f4f6")}>
             <p style={styles.statLabel}>
-              <i className="bi bi-check-circle" style={{ color: "#ef4444" }}></i> Completion Rate
+              <i className="bi bi-calendar" style={{ color: "#6b7280" }}></i> Total Days
             </p>
-            <p style={styles.statValue}>{stats.completionRate}%</p>
+            <p style={styles.statValue}>{stats.totalDays}</p>
           </div>
-          <div 
-            style={styles.statCard("#e0f2fe")}
-            onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
-            onMouseLeave={(e) => e.currentTarget.style.transform = "translateY(0)"}
-          >
+          <div style={styles.statCard("#ede9fe")}>
             <p style={styles.statLabel}>
-              <i className="bi bi-list-ul" style={{ color: "#0ea5e9" }}></i> Total Entries
+              <i className="bi bi-graph-up" style={{ color: "#8b5cf6" }}></i> Approval Rate
             </p>
-            <p style={styles.statValue}>{stats.totalEntries}</p>
+            <p style={styles.statValue}>{stats.approvalRate}%</p>
           </div>
         </div>
 
-        {/* Filter and Search Section */}
+        {/* Filter Section */}
         <div style={styles.filterSection}>
           <span style={{ fontSize: "0.875rem", color: "#6b7280", marginRight: "0.5rem" }}>Filter:</span>
-          {["week", "month", "year", "all"].map((f) => (
+          {[
+            { key: "all", label: "All" },
+            { key: "thisMonth", label: "This Month" },
+            { key: "lastMonth", label: "Last Month" },
+            { key: "upcoming", label: "Upcoming" }
+          ].map((f) => (
             <button
-              key={f}
-              style={styles.filterButton(filter === f)}
-              onClick={() => setFilter(f)}
+              key={f.key}
+              style={styles.filterButton(filter === f.key)}
+              onClick={() => setFilter(f.key)}
             >
-              {f.charAt(0).toUpperCase() + f.slice(1)}
+              {f.label}
             </button>
           ))}
+          <select
+            style={{...styles.searchInput, minWidth: "120px"}}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <option value="all">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
           <input
             type="text"
             style={styles.searchInput}
-            placeholder="Search by date or notes..."
+            placeholder="Search leaves..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -593,109 +657,133 @@ function ProductivityMonitor() {
       </div>
 
       {/* Charts */}
-      {chartData.length > 0 ? (
-        <>
-          <div style={styles.chartContainer}>
-            <h3 style={styles.chartTitle}>Productivity Overview</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="goalsCompleted" stroke="#3b82f6" name="Goals Completed" strokeWidth={2} />
-                <Line type="monotone" dataKey="goalsAssigned" stroke="#f59e0b" name="Goals Assigned" strokeWidth={2} />
-                <Line type="monotone" dataKey="qualityScore" stroke="#10b981" name="Quality Score" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div style={styles.chartContainer}>
-            <h3 style={styles.chartTitle}>Hours vs Productivity Rate</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="hoursWorked" fill="#8b5cf6" name="Hours Worked" />
-                <Bar dataKey="productivityRate" fill="#f59e0b" name="Productivity Rate %" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </>
-      ) : (
+      <div style={styles.chartGrid}>
         <div style={styles.chartContainer}>
-          <div style={styles.emptyState}>
-            <i className="bi bi-bar-chart-line" style={{ fontSize: "3rem", display: "block", marginBottom: "1rem", color: "#d1d5db" }}></i>
-            <h3 style={{ color: "#6b7280" }}>No Data to Display</h3>
-            <p style={{ color: "#9ca3af" }}>Add your first productivity entry to see charts here.</p>
-          </div>
+          <h3 style={styles.chartTitle}>Leave Status Distribution</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie
+                data={statusChartData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                outerRadius={80}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {statusChartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div style={styles.chartContainer}>
+          <h3 style={styles.chartTitle}>Monthly Leave Trends</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <LineChart data={monthlyTrendData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="leaves" stroke="#3b82f6" strokeWidth={2} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Department Chart */}
+      {deptChartData.length > 0 && (
+        <div style={styles.chartContainer}>
+          <h3 style={styles.chartTitle}>Department Leave Statistics</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={deptChartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="total" fill="#3b82f6" name="Total" />
+              <Bar dataKey="approved" fill="#10b981" name="Approved" />
+              <Bar dataKey="pending" fill="#f59e0b" name="Pending" />
+              <Bar dataKey="rejected" fill="#ef4444" name="Rejected" />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       )}
 
-      {/* Data Table */}
+      {/* Table */}
       <div style={styles.tableContainer}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-          <h3 style={styles.chartTitle}>Detailed Records</h3>
+          <h3 style={styles.chartTitle}>Leave Requests</h3>
           <span style={{ fontSize: "0.875rem", color: "#6b7280" }}>
-            Showing {getFilteredData().length} of {productivityData.length} entries
+            Showing {filteredData.length} of {leaveRequests.length} requests
           </span>
         </div>
-        
-        {productivityData.length === 0 ? (
+
+        {filteredData.length === 0 ? (
           <div style={styles.emptyState}>
             <i className="bi bi-inbox" style={{ fontSize: "3rem", display: "block", marginBottom: "1rem", color: "#d1d5db" }}></i>
-            <p style={{ color: "#9ca3af" }}>No productivity data found. Click "Add Entry" to get started!</p>
+            <p>No leave requests found</p>
           </div>
         ) : (
           <table style={styles.table}>
             <thead>
               <tr>
-                <th style={styles.th}>Date</th>
-                <th style={styles.th}>Hours</th>
-                <th style={styles.th}>Goals Assigned</th>
-                <th style={styles.th}>Goals Completed</th>
-                <th style={styles.th}>Quality Score</th>
-                <th style={styles.th}>Productivity Rate</th>
-                <th style={styles.th}>Notes</th>
+                <th style={styles.th}>Employee</th>
+                <th style={styles.th}>Department</th>
+                <th style={styles.th}>Leave Type</th>
+                <th style={styles.th}>Start Date</th>
+                <th style={styles.th}>End Date</th>
+                <th style={styles.th}>Days</th>
+                <th style={styles.th}>Status</th>
                 <th style={styles.th}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {getFilteredData().map((entry) => (
-                <tr key={entry.id} style={{ transition: "background 0.2s" }}>
-                  <td style={styles.td}>{new Date(entry.date).toLocaleDateString()}</td>
-                  <td style={styles.td}>{entry.hoursWorked}h</td>
-                  <td style={styles.td}>{entry.goalsAssigned}</td>
-                  <td style={styles.td}>{entry.goalsCompleted}</td>
+              {filteredData.map((leave) => (
+                <tr key={leave.id}>
+                  <td style={styles.td}>{leave.employeeName || "—"}</td>
+                  <td style={styles.td}>{leave.department || "—"}</td>
+                  <td style={styles.td}>{leave.leaveType || "—"}</td>
+                  <td style={styles.td}>{leave.startDate ? new Date(leave.startDate).toLocaleDateString() : "—"}</td>
+                  <td style={styles.td}>{leave.endDate ? new Date(leave.endDate).toLocaleDateString() : "—"}</td>
+                  <td style={styles.td}>{leave.totalDays ?? "—"}</td>
                   <td style={styles.td}>
-                    <span style={styles.badge(
-                      entry.qualityScore >= 80 ? "completed" :
-                      entry.qualityScore >= 60 ? "inProgress" :
-                      entry.qualityScore >= 40 ? "review" : "pending"
-                    )}>
-                      {entry.qualityScore}%
+                    <span style={styles.badge(leave.status)}>
+                      {leave.status}
                     </span>
                   </td>
                   <td style={styles.td}>
-                    <span style={{ fontWeight: "600", color: entry.productivityRate >= 80 ? "#10b981" : "#f59e0b" }}>
-                      {entry.productivityRate || Math.round((entry.goalsCompleted / entry.goalsAssigned) * 100)}%
-                    </span>
-                  </td>
-                  <td style={styles.td}>{entry.notes || "-"}</td>
-                  <td style={styles.td}>
-                    <button 
-                      style={{...styles.button, padding: "0.25rem 0.75rem", fontSize: "0.75rem", marginRight: "0.5rem"}}
-                      onClick={() => handleEdit(entry)}
+                    {leave.status === "Pending" && (
+                      <>
+                        <button
+                          style={styles.statusButton("#10b981")}
+                          onClick={() => updateStatus(leave.id, "Approved")}
+                        >
+                          Approve
+                        </button>
+                        <button
+                          style={styles.statusButton("#ef4444")}
+                          onClick={() => updateStatus(leave.id, "Rejected")}
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    <button
+                      style={{...styles.button, padding: "0.25rem 0.75rem", fontSize: "0.75rem", marginRight: "0.25rem"}}
+                      onClick={() => handleEdit(leave)}
                     >
                       <i className="bi bi-pencil"></i>
                     </button>
-                    <button 
+                    <button
                       style={{...styles.buttonDanger, padding: "0.25rem 0.75rem", fontSize: "0.75rem"}}
-                      onClick={() => handleDelete(entry.id)}
+                      onClick={() => handleDelete(leave.id)}
                     >
                       <i className="bi bi-trash"></i>
                     </button>
@@ -711,107 +799,111 @@ function ProductivityMonitor() {
       {showForm && (
         <div style={styles.formOverlay} onClick={() => {
           setShowForm(false);
-          setEditingEntry(null);
+          setEditingLeave(null);
           resetForm();
         }}>
           <div style={styles.formContainer} onClick={(e) => e.stopPropagation()}>
             <h2 style={{ margin: "0 0 1.5rem 0", color: "#1f2937" }}>
-              {editingEntry ? "Edit Entry" : "Add New Entry"}
+              {editingLeave ? "Edit Leave Request" : "New Leave Request"}
             </h2>
             <form onSubmit={handleSubmit}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div style={styles.formGroup}>
+                  <label htmlFor="employeeName" style={styles.label}>Employee Name *</label>
+                  <input
+                    id="employeeName"
+                    type="text"
+                    style={styles.input}
+                    value={currentLeave.employeeName}
+                    onChange={(e) => setCurrentLeave({...currentLeave, employeeName: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label htmlFor="department" style={styles.label}>Department *</label>
+                  <input
+                    id="department"
+                    type="text"
+                    style={styles.input}
+                    value={currentLeave.department}
+                    onChange={(e) => setCurrentLeave({...currentLeave, department: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
               <div style={styles.formGroup}>
-                <label style={styles.label}>Date *</label>
-                <input
-                  type="date"
+                <label htmlFor="leaveType" style={styles.label}>Leave Type *</label>
+                <select
+                  id="leaveType"
                   style={styles.input}
-                  value={currentEntry.date}
-                  onChange={(e) => setCurrentEntry({...currentEntry, date: e.target.value})}
+                  value={currentLeave.leaveType}
+                  onChange={(e) => setCurrentLeave({...currentLeave, leaveType: e.target.value})}
+                  required
+                >
+                  <option value="Annual">Annual</option>
+                  <option value="Sick">Sick</option>
+                  <option value="Casual">Casual</option>
+                  <option value="Maternity">Maternity</option>
+                  <option value="Paternity">Paternity</option>
+                  <option value="Unpaid">Unpaid</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div style={styles.formGroup}>
+                  <label htmlFor="startDate" style={styles.label}>Start Date *</label>
+                  <input
+                    id="startDate"
+                    type="date"
+                    style={styles.input}
+                    value={currentLeave.startDate}
+                    onChange={(e) => setCurrentLeave({...currentLeave, startDate: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label htmlFor="endDate" style={styles.label}>End Date *</label>
+                  <input
+                    id="endDate"
+                    type="date"
+                    style={styles.input}
+                    value={currentLeave.endDate}
+                    onChange={(e) => setCurrentLeave({...currentLeave, endDate: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={styles.formGroup}>
+                <label htmlFor="reason" style={styles.label}>Reason *</label>
+                <textarea
+                  id="reason"
+                  style={{...styles.input, minHeight: "60px"}}
+                  value={currentLeave.reason}
+                  onChange={(e) => setCurrentLeave({...currentLeave, reason: e.target.value})}
+                  placeholder="Please provide reason for leave"
                   required
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Hours Worked *</label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    min="0"
-                    style={styles.input}
-                    value={currentEntry.hoursWorked}
-                    onChange={(e) => setCurrentEntry({...currentEntry, hoursWorked: e.target.value})}
-                    placeholder="e.g., 8.5"
-                    required
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Quality Score (%) *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    style={styles.input}
-                    value={currentEntry.qualityScore}
-                    onChange={(e) => setCurrentEntry({...currentEntry, qualityScore: e.target.value})}
-                    placeholder="0-100"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Goals Assigned *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    style={styles.input}
-                    value={currentEntry.goalsAssigned}
-                    onChange={(e) => setCurrentEntry({...currentEntry, goalsAssigned: e.target.value})}
-                    placeholder="e.g., 5"
-                    required
-                  />
-                </div>
-
-                <div style={styles.formGroup}>
-                  <label style={styles.label}>Goals Completed *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    style={styles.input}
-                    value={currentEntry.goalsCompleted}
-                    onChange={(e) => setCurrentEntry({...currentEntry, goalsCompleted: e.target.value})}
-                    placeholder="e.g., 4"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Notes</label>
-                <textarea
-                  style={{...styles.input, minHeight: "60px"}}
-                  value={currentEntry.notes}
-                  onChange={(e) => setCurrentEntry({...currentEntry, notes: e.target.value})}
-                  placeholder="Add any additional notes..."
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "1.5rem" }}>
+              <div style={styles.formActions}>
                 <button
                   type="button"
-                  style={styles.buttonSecondary}
+                  style={{...styles.button, backgroundColor: "#9ca3af"}}
                   onClick={() => {
                     setShowForm(false);
-                    setEditingEntry(null);
+                    setEditingLeave(null);
                     resetForm();
                   }}
                 >
                   Cancel
                 </button>
                 <button type="submit" style={styles.button}>
-                  {editingEntry ? "Update Entry" : "Add Entry"}
+                  {editingLeave ? "Update" : "Submit"} Request
                 </button>
               </div>
             </form>
@@ -821,13 +913,6 @@ function ProductivityMonitor() {
 
       {/* Global styles */}
       <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .spin {
-          animation: spin 1s linear infinite;
-        }
         .bi {
           font-family: "bootstrap-icons" !important;
         }
@@ -848,4 +933,4 @@ function ProductivityMonitor() {
   );
 }
 
-export default ProductivityMonitor;
+export default LeaveManagement;

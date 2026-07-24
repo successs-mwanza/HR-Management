@@ -254,12 +254,25 @@ function EmployeeReport() {
               <p className="text-muted mb-0">Review attendance patterns with a clear and friendly overview.</p>
             </div>
           </div>
-          <button 
-            className="btn btn-outline-secondary btn-pill"
-            onClick={() => navigate(-1)}
-          >
-            <i className="bi bi-arrow-left me-1"></i> Back to Employees
-          </button>
+          <div className="d-flex flex-wrap gap-2">
+            <button
+              className="btn btn-outline-primary btn-pill"
+              onClick={() => navigate('/employee-productivity', {
+                state: {
+                  employeeId: employee?.id,
+                  employeeName: `${employee?.firstName || ""} ${employee?.middleName || ""} ${employee?.lastName || ""}`.trim()
+                }
+              })}
+            >
+              <i className="bi bi-graph-up me-1"></i> Open Productivity Monitoring
+            </button>
+            <button 
+              className="btn btn-outline-secondary btn-pill"
+              onClick={() => navigate(-1)}
+            >
+              <i className="bi bi-arrow-left me-1"></i> Back to Employees
+            </button>
+          </div>
         </div>
       </div>
 

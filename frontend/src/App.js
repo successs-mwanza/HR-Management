@@ -20,6 +20,8 @@ import Payslip from "./pages/finance/payroll/payslip";
 import EmployeeReport from "./pages/employee/EmployeeReport"
 import Employees from "./pages/employee/Employees";
 import  ProductivityMonitoring from "./pages/employee/Productivity_Monitoring";
+import LeaveManagement from "./pages/employee/Leave_Management";
+import EmployeeProductivityMonitoring from "./pages/employee/Employee_ProductivityMonitor"
 
 
 function Layout() {
@@ -53,9 +55,14 @@ function Layout() {
             <Route path="/employees" element={<Employees />} /> 
             <Route path="/dashboard" element={<DashboardCRM />} />
             <Route path="/productivity" element={<ProductivityMonitoring />} />
-
+            <Route path="/employee-productivity" element={<EmployeeProductivityMonitoring />} />
+            <Route path="/leave" element={<LeaveManagement />} />
             {/* Employee Report Route - with employeeId parameter */}
             <Route path="/employee-report/:employeeId" element={<EmployeeReport />} />
+             
+            
+
+            
 
             {/* <Route path="/addemployee" element={<AddEmployee />} /> */}
 
