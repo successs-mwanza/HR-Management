@@ -8,14 +8,24 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Index;
 
 @Entity
-@Table(name = "OveralllProductivityMonitoring")
-public class ProductivityMonitoringEntry {
+@Table(name = "EmployeeProductivityMonitoring", 
+       indexes = {
+           @Index(name = "idx_employeeId", columnList = "employeeId")
+       })
+public class EmployeeProductivityMonitoringEntry {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // THIS IS THE CRITICAL FIELD - Unique identifier for each employee
+    @Column(nullable = false)
+    private String employeeId;
+
+    private String employeeName;
 
     @Column(nullable = false)
     private LocalDate date;
@@ -39,12 +49,33 @@ public class ProductivityMonitoringEntry {
     @Column(length = 1000)
     private String notes;
 
+    // Default constructor
+    public EmployeeProductivityMonitoringEntry() {
+    }
+
+    // Getters and Setters
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
+    }
+
+    public String getEmployeeName() {
+        return employeeName;
+    }
+
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
     }
 
     public LocalDate getDate() {

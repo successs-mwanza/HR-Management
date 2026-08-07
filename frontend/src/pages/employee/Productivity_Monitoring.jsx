@@ -141,6 +141,7 @@ function ProductivityMonitoring() {
       setLoading(true);
       setError("");
 
+
       const response = editingEntry
         ? await fetch(`${API_BASE_URL}/${editingEntry.id}`, {
             method: "PUT",
