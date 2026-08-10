@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.Entity.Employee;
 import com.example.repository.EmployeeRepository;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://192.168.122.13122.13122.13122.13122.13122.131:3000")
 @RestController
 @RequestMapping("/api")
 public class EmployeeController {

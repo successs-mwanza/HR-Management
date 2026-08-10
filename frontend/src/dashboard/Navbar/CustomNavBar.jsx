@@ -28,7 +28,7 @@ function CustomNavbar({ sidebarOpen, setSidebarOpen }) {
     // Fetch from backend
     const token = localStorage.getItem("token");
     if (token) {
-      fetch("http://localhost:8081/api/users/me", {
+      fetch("http://192.168.122.131:8081/api/users/me", {
         headers: {
           Authorization: "Bearer " + token,
         },

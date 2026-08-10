@@ -34,7 +34,7 @@ function EmployeeProductivityMonitoring() {
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
 
-  const API_BASE_URL = "http://localhost:8081/api/employeeproductivity";
+  const API_BASE_URL = "http://192.168.122.131:8081/api/employeeproductivity";
 
   useEffect(() => {
     if (selectedEmployeeId) {

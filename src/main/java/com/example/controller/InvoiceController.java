@@ -13,7 +13,7 @@ import com.example.services.InvoiceNumberGenerator;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://localhost:3000") // React frontend
+@CrossOrigin(origins = "http://192.168.122.131:3000") // React frontend
 public class InvoiceController {
 
     @Autowired

@@ -32,7 +32,7 @@ function EmployeeReport() {
 
   const fetchEmployeeDetails = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:8081/api/employees/${employeeId}`);
+      const response = await fetch(`http://192.168.122.131:8081/api/employees/${employeeId}`);
       if (!response.ok) throw new Error("Failed to fetch employee details");
       const data = await response.json();
       setEmployee(data);
@@ -62,7 +62,7 @@ function EmployeeReport() {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:8081/api/attendance/employee/${employeeId}?startDate=${start}&endDate=${end}`
+        `http://192.168.122.131:8081/api/attendance/employee/${employeeId}?startDate=${start}&endDate=${end}`
       );
       if (!response.ok) throw new Error("Failed to fetch attendance");
       const data = await response.json();

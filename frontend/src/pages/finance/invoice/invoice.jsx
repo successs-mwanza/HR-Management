@@ -56,7 +56,7 @@ function Invoice() {
   // POST invoice to backend
   const handleSubmit = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/invoice", {
+      const response = await fetch("http://192.168.122.131:8080/api/invoice", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

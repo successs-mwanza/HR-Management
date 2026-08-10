@@ -28,7 +28,7 @@ import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/attendance")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "http://192.168.122.13122.13122.131:3000")
 public class AttendanceController {
     
     @Autowired

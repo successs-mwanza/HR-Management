@@ -22,7 +22,7 @@ function Navbar({ sidebarOpen, setSidebarOpen }) {
 
     // Option 2 (better): fetch from backend
     
-    fetch("http://localhost:8081/api/users/me", {
+    fetch("http://192.168.122.131:8081/api/users/me", {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },

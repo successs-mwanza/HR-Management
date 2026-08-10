@@ -5,7 +5,7 @@ import {
   AreaChart, Area
 } from "recharts";
 
-const API_BASE_URL = "http://localhost:8081/api/leave-management";
+const API_BASE_URL = "http://192.168.122.131:8081/api/leave-management";
 
 function LeaveManagement() {
   // State Management

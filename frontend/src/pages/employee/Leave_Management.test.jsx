@@ -33,14 +33,14 @@ describe("LeaveManagement", () => {
 
   it("submits a new leave request to the backend with the expected payload", async () => {
     global.fetch.mockImplementation((url, options = {}) => {
-      if (url === "http://localhost:8081/api/leave-management" && options.method === "GET") {
+      if (url === "http://192.168.122.131:8081/api/leave-management" && options.method === "GET") {
         return Promise.resolve({
           ok: true,
           json: async () => [],
         });
       }
 
-      if (url === "http://localhost:8081/api/leave-management" && options.method === "POST") {
+      if (url === "http://192.168.122.131:8081/api/leave-management" && options.method === "POST") {
         return Promise.resolve({
           ok: true,
           json: async () => ({ id: 1, employeeName: "Alice Doe" }),
@@ -77,7 +77,7 @@ describe("LeaveManagement", () => {
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8081/api/leave-management",
+        "http://192.168.122.131:8081/api/leave-management",
         expect.objectContaining({
           method: "POST",
           headers: expect.any(Object),
