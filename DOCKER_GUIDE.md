@@ -28,9 +28,9 @@
    ```
 
 4. **Access the application**:
-   - Frontend: http://192.168.122.131:3000
-   - Backend API: http://192.168.122.131:8081/api
-   - Database: 192.168.122.131:5433 (PostgreSQL)
+   - Frontend: http://192.168.122.133:3000
+   - Backend API: http://192.168.122.133:8081/api
+   - Database: 192.168.122.133:5433 (PostgreSQL)
 
 ---
 
@@ -118,7 +118,7 @@ Host Port : Container Port
   ↓            ↓
 Your laptop  Inside container
 ```
-- Access backend at `192.168.122.131:8081`
+- Access backend at `192.168.122.133:8081`
 - Internally, containers reach each other by service name: `postgres`, `backend`, `frontend`
 
 ### Environment Variables
@@ -190,12 +190,12 @@ docker-compose build --no-cache backend
 
 ### Backend can't connect to database
 - Ensure `postgres` service is healthy: `docker-compose logs postgres`
-- Check backend uses `postgres:5432` not `192.168.122.131:5433`
+- Check backend uses `postgres:5432` not `192.168.122.133:5433`
 - Wait 10-15 seconds for postgres health check
 
 ### Frontend shows blank page
 - Check logs: `docker-compose logs frontend`
-- Ensure `REACT_APP_API_URL=http://192.168.122.131:8081/api`
+- Ensure `REACT_APP_API_URL=http://192.168.122.133:8081/api`
 - Clear browser cache (Ctrl+Shift+Delete)
 
 ### Port already in use
@@ -240,8 +240,8 @@ docker-compose up --build
    ```
 
 3. **Test the flow**:
-   - Login at http://192.168.122.131:3000
-   - Check backend at http://192.168.122.131:8081/api/employees
+   - Login at http://192.168.122.133:3000
+   - Check backend at http://192.168.122.133:8081/api/employees
    - Monitor logs in real-time
 
 ---

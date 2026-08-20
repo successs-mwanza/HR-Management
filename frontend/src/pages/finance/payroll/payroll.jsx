@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { apiUrl } from "../../../apiConfig";
 
 function Payroll() {
   const [basicSalary, setBasicSalary] = useState(0);
@@ -13,7 +14,7 @@ function Payroll() {
 
   // ✅ Fetch employees with loading state
   useEffect(() => {
-    fetch("http://192.168.122.131:8080/api/employees")
+    fetch(apiUrl("/api/employees"))
       .then((res) => res.json())
       .then((data) => {
         console.log("Employees:", data); // debug
@@ -48,7 +49,7 @@ function Payroll() {
       netSalary,
     };
 
-    fetch("http://192.168.122.131:8080/api/payroll", {
+    fetch(apiUrl("/api/payroll"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

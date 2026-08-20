@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { apiUrl } from "../../apiConfig";
 
 function EmployeeReport() {
   const { employeeId } = useParams();
@@ -18,6 +19,22 @@ function EmployeeReport() {
     leaveDays: 0,
     attendanceRate: 0
   });
+  const [productivityStats, setProductivityStats] = useState({
+    totalHours: 0,
+    totalGoalsAssigned: 0,
+    totalGoalsCompleted: 0,
+    averageQuality: 0,
+    completionRate: 0,
+    efficiency: 0
+  });
+  const [leaveStats, setLeaveStats] = useState({
+    totalRequests: 0,
+    approved: 0,
+    pending: 0,
+    rejected: 0,
+    totalDays: 0,
+    approvalRate: 0
+  });
 
   // Filter states
   const [filterType, setFilterType] = useState("month");
@@ -32,7 +49,7 @@ function EmployeeReport() {
 
   const fetchEmployeeDetails = useCallback(async () => {
     try {
-      const response = await fetch(`http://192.168.122.131:8081/api/employees/${employeeId}`);
+      const response = await fetch(apiUrl(`/api/employees/${employeeId}`));
       if (!response.ok) throw new Error("Failed to fetch employee details");
       const data = await response.json();
       setEmployee(data);
@@ -61,9 +78,7 @@ function EmployeeReport() {
   const fetchEmployeeAttendance = useCallback(async (start, end) => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `http://192.168.122.131:8081/api/attendance/employee/${employeeId}?startDate=${start}&endDate=${end}`
-      );
+      const response = await fetch(apiUrl(`/api/attendance/employee/${employeeId}?startDate=${start}&endDate=${end}`));
       if (!response.ok) throw new Error("Failed to fetch attendance");
       const data = await response.json();
       setAttendance(data);
@@ -75,6 +90,69 @@ function EmployeeReport() {
       setLoading(false);
     }
   }, [employeeId]);
+
+  const getEmployeeFullName = () => {
+    return `${employee?.firstName || ""} ${employee?.middleName || ""} ${employee?.lastName || ""}`.trim();
+  };
+
+  const fetchEmployeeProductivity = useCallback(async () => {
+    if (!employeeId) return;
+    try {
+      const response = await fetch(apiUrl(`/api/employeeproductivity`));
+      if (!response.ok) throw new Error("Failed to fetch productivity data");
+      const data = await response.json();
+      const filtered = data.filter(item => item.employeeId && String(item.employeeId) === String(employeeId));
+
+      const totalHours = filtered.reduce((sum, d) => sum + (d.hoursWorked || 0), 0);
+      const totalGoalsAssigned = filtered.reduce((sum, d) => sum + (d.goalsAssigned || 0), 0);
+      const totalGoalsCompleted = filtered.reduce((sum, d) => sum + (d.goalsCompleted || 0), 0);
+      const averageQuality = filtered.length > 0 ? Math.round(filtered.reduce((sum, d) => sum + (d.qualityScore || 0), 0) / filtered.length) : 0;
+      const completionRate = totalGoalsAssigned > 0 ? Math.round((totalGoalsCompleted / totalGoalsAssigned) * 100) : 0;
+      const efficiency = totalHours > 0 ? Math.round((totalGoalsCompleted / totalHours) * 10) / 10 : 0;
+
+      setProductivityStats({
+        totalHours,
+        totalGoalsAssigned,
+        totalGoalsCompleted,
+        averageQuality,
+        completionRate,
+        efficiency
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }, [employeeId]);
+
+  const fetchEmployeeLeaveRecords = useCallback(async () => {
+    if (!employee) return;
+
+    try {
+      const response = await fetch(apiUrl(`/api/leave-management`));
+      if (!response.ok) throw new Error("Failed to fetch leave records");
+      const data = await response.json();
+
+      const fullName = getEmployeeFullName().toLowerCase();
+      const filtered = data.filter(record => record.employeeName && record.employeeName.toLowerCase() === fullName);
+
+      const totalRequests = filtered.length;
+      const approved = filtered.filter(l => l.status === "Approved").length;
+      const pending = filtered.filter(l => l.status === "Pending").length;
+      const rejected = filtered.filter(l => l.status === "Rejected").length;
+      const totalDays = filtered.reduce((sum, l) => sum + (l.totalDays || 0), 0);
+      const approvalRate = totalRequests > 0 ? Math.round((approved / totalRequests) * 100) : 0;
+
+      setLeaveStats({
+        totalRequests,
+        approved,
+        pending,
+        rejected,
+        totalDays,
+        approvalRate
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }, [employee]);
 
   const applyFilter = useCallback(() => {
     let start = "";
@@ -122,6 +200,13 @@ function EmployeeReport() {
       applyFilter();
     }
   }, [employeeId, fetchEmployeeDetails, applyFilter]);
+
+  useEffect(() => {
+    if (employee) {
+      fetchEmployeeProductivity();
+      fetchEmployeeLeaveRecords();
+    }
+  }, [employee, fetchEmployeeProductivity, fetchEmployeeLeaveRecords]);
 
   const handleFilterChange = (type) => {
     setFilterType(type);
@@ -465,6 +550,110 @@ function EmployeeReport() {
             <div className="card-body text-center">
               <h6>Attendance Rate</h6>
               <h3 className="mb-0">{stats.attendanceRate.toFixed(1)}%</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="row g-3 mb-4">
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-primary">
+            <div className="card-body text-center">
+              <h6>Total Hours</h6>
+              <h3 className="mb-0">{productivityStats.totalHours}</h3>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-success">
+            <div className="card-body text-center">
+              <h6>Goals Completed</h6>
+              <h3 className="mb-0">{productivityStats.totalGoalsCompleted}/{productivityStats.totalGoalsAssigned}</h3>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-warning">
+            <div className="card-body text-center">
+              <h6>Completion Rate</h6>
+              <h3 className="mb-0">{productivityStats.completionRate}%</h3>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-info">
+            <div className="card-body text-center">
+              <h6>Average Quality</h6>
+              <h3 className="mb-0">{productivityStats.averageQuality}%</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="row g-3 mb-4">
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-primary">
+            <div className="card-body text-center">
+              <h6>Leave Requests</h6>
+              <h3 className="mb-0">{leaveStats.totalRequests}</h3>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-success">
+            <div className="card-body text-center">
+              <h6>Approved</h6>
+              <h3 className="mb-0">{leaveStats.approved}</h3>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-warning">
+            <div className="card-body text-center">
+              <h6>Pending</h6>
+              <h3 className="mb-0">{leaveStats.pending}</h3>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-danger">
+            <div className="card-body text-center">
+              <h6>Rejected</h6>
+              <h3 className="mb-0">{leaveStats.rejected}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="row g-3 mb-4">
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-primary">
+            <div className="card-body text-center">
+              <h6>Total Leave Days</h6>
+              <h3 className="mb-0">{leaveStats.totalDays}</h3>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-info">
+            <div className="card-body text-center">
+              <h6>Approval Rate</h6>
+              <h3 className="mb-0">{leaveStats.approvalRate}%</h3>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-secondary">
+            <div className="card-body text-center">
+              <h6>Productivity Efficiency</h6>
+              <h3 className="mb-0">{productivityStats.efficiency}</h3>
+            </div>
+          </div>
+        </div>
+        <div className="col-md-3">
+          <div className="card shadow-sm report-stat-card report-stat-card-secondary">
+            <div className="card-body text-center">
+              <h6>Productivity Rate</h6>
+              <h3 className="mb-0">{productivityStats.completionRate}%</h3>
             </div>
           </div>
         </div>

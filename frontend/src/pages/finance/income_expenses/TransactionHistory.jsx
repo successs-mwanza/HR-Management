@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../../../apiConfig";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -11,6 +12,8 @@ function TransactionHistory() {
   const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+
+  const API_BASE_URL = apiUrl("/api/income-expenses");
 
   // Notification state
   const [notification, setNotification] = useState({
@@ -25,8 +28,6 @@ function TransactionHistory() {
     show: false,
     id: null,
   });
-
-  const API_BASE_URL = "http://192.168.122.131:8081/api/income-expenses";
 
   // Fetch transactions from backend
   useEffect(() => {

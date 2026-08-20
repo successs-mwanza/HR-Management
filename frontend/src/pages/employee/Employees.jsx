@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // ✅ ADD THIS IMPORT
+import { apiUrl } from "../../apiConfig";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 function EmployeeIndex() {
@@ -64,7 +65,7 @@ function EmployeeIndex() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch("http://192.168.122.131:8081/api/employees");
+      const response = await fetch(apiUrl("/api/employees"));
       if (!response.ok) throw new Error("Failed to fetch employees");
       const data = await response.json();
       const list = Array.isArray(data) ? data : data.data || data.content || [];
@@ -151,7 +152,7 @@ function EmployeeIndex() {
   const handleDelete = async () => {
     const id = deleteConfirm.id;
     try {
-      await fetch(`http://192.168.122.131:8081/api/employees/${id}`, {
+      await fetch(apiUrl(`/api/employees/${id}`), {
         method: "DELETE",
       });
 
@@ -199,7 +200,7 @@ function EmployeeIndex() {
     }
 
     try {
-      const response = await fetch("http://192.168.122.131:8081/api/employees", {
+      const response = await fetch(apiUrl("/api/employees"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -252,7 +253,7 @@ function EmployeeIndex() {
     }
 
     try {
-      const response = await fetch(`http://192.168.122.131:8081/api/employees/${editFormData.id}`, {
+      const response = await fetch(apiUrl(`/api/employees/${editFormData.id}`), {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

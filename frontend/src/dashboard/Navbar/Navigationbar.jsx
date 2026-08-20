@@ -1,6 +1,7 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { apiUrl } from "../../apiConfig";
 
 const getPageTitle = (pathname) => {
   if (pathname.startsWith("/employees")) return "Employee Management";
@@ -22,7 +23,7 @@ function Navbar({ sidebarOpen, setSidebarOpen }) {
 
     // Option 2 (better): fetch from backend
     
-    fetch("http://192.168.122.131:8081/api/users/me", {
+    fetch(apiUrl("/api/users/me"), {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },

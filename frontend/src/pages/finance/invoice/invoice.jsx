@@ -1,8 +1,10 @@
 // File: src/components/Invoice.js
 import { useState } from "react";
+import { apiUrl } from "../../../apiConfig";
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
 function Invoice() {
   const [invoice, setInvoice] = useState({
     invoiceNumber: "",
@@ -56,7 +58,7 @@ function Invoice() {
   // POST invoice to backend
   const handleSubmit = async () => {
     try {
-      const response = await fetch("http://192.168.122.131:8080/api/invoice", {
+      const response = await fetch(apiUrl("/api/invoice"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

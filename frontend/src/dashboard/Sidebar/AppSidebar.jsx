@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { apiUrl } from "../../apiConfig";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import hrLogo from "./human-resource-logo-design-inspiration-vector-illustration_500223-487.avif";
@@ -65,7 +66,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     // Fetch from backend for more complete user data
     const token = localStorage.getItem("token");
     if (token) {
-      fetch("http://192.168.122.131:8081/api/users/me", {
+      fetch(apiUrl("/api/users/me"), {
         headers: {
           Authorization: "Bearer " + token,
         },

@@ -13,7 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "http://192.168.122.131:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "http://192.168.122.133:3000"})
 
 public class SignupController { 
 

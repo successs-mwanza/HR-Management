@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { apiUrl } from "../../../apiConfig";
 
 function IncomeExpense() {
   const navigate = useNavigate();
@@ -7,7 +8,7 @@ function IncomeExpense() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const API_BASE_URL = "http://192.168.122.131:8081/api/income-expenses";
+  const API_BASE_URL = apiUrl("/api/income-expenses");
 
   const [formData, setFormData] = useState({
     type: "income",

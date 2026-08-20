@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { apiUrl } from "../../apiConfig";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,
@@ -34,7 +35,7 @@ function ProductivityMonitoring() {
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
 
-  const API_BASE_URL = "http://192.168.122.131:8081/api/productivity-monitoring";
+  const API_BASE_URL = apiUrl("/api/productivity-monitoring");
 
   // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
@@ -662,7 +663,7 @@ function ProductivityMonitoring() {
                   <input
                     type="number"
                     step="0.5"
-                    min="0"
+                    
                     style={styles.input}
                     value={currentEntry.hoursWorked}
                     onChange={(e) => setCurrentEntry({...currentEntry, hoursWorked: parseFloat(e.target.value)})}
@@ -674,7 +675,7 @@ function ProductivityMonitoring() {
                   <label style={styles.label}>Quality Score (%)</label>
                   <input
                     type="number"
-                    min="0"
+                  
                     max="100"
                     style={styles.input}
                     value={currentEntry.qualityScore}
@@ -689,7 +690,7 @@ function ProductivityMonitoring() {
                   <label style={styles.label}>Goals Assigned</label>
                   <input
                     type="number"
-                    min="0"
+                  
                     style={styles.input}
                     value={currentEntry.goalsAssigned}
                     onChange={(e) => setCurrentEntry({...currentEntry, goalsAssigned: parseInt(e.target.value)})}
@@ -701,7 +702,7 @@ function ProductivityMonitoring() {
                   <label style={styles.label}>Goals Completed</label>
                   <input
                     type="number"
-                    min="0"
+                  
                     style={styles.input}
                     value={currentEntry.goalsCompleted}
                     onChange={(e) => setCurrentEntry({...currentEntry, goalsCompleted: parseInt(e.target.value)})}

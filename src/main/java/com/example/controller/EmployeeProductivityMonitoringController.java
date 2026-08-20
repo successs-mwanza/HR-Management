@@ -22,7 +22,7 @@ import com.example.services.EmployeeProductivityMonitoringService;
 
 @RestController
 @RequestMapping("/api/employeeproductivity")
-@CrossOrigin(origins = "http://192.168.122.13122.13122.13122.131:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "http://192.168.122.133:3000"})
 public class EmployeeProductivityMonitoringController {
 
     @Autowired

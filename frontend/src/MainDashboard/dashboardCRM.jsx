@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { apiUrl } from '../apiConfig';
 
 function DashboardCRM() {
   const [stats, setStats] = useState({
@@ -12,9 +13,9 @@ function DashboardCRM() {
     const today = new Date().toISOString().slice(0, 10);
 
     Promise.all([
-      fetch('http://192.168.122.131:8081/api/employees').then((res) => (res.ok ? res.json() : [])),
-      fetch('http://192.168.122.131:8081/api/income-expenses').then((res) => (res.ok ? res.json() : [])),
-      fetch(`http://192.168.122.131:8081/api/attendance/stats?date=${today}`).then((res) => (res.ok ? res.json() : null)),
+      fetch(apiUrl('/api/employees')).then((res) => (res.ok ? res.json() : [])),
+      fetch(apiUrl('/api/income-expenses')).then((res) => (res.ok ? res.json() : [])),
+      fetch(apiUrl(`/api/attendance/stats?date=${today}`)).then((res) => (res.ok ? res.json() : null)),
     ])
       .then(([employees, transactions, attendance]) => {
         setStats({

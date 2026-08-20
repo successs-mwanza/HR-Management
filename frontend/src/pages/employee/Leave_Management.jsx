@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { apiUrl } from "../../apiConfig";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,
   AreaChart, Area
 } from "recharts";
 
-const API_BASE_URL = "http://192.168.122.131:8081/api/leave-management";
+const API_BASE_URL = apiUrl("/api/leave-management");
 
 function LeaveManagement() {
   // State Management

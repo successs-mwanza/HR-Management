@@ -9,6 +9,7 @@ import {
   Calendar, Clock, CheckCircle, TrendingUp, Award, 
   AlertCircle, Users, Target, Zap 
 } from "lucide-react";
+import { apiUrl } from "../../apiConfig";
 
 function EmployeeProductivityMonitoring() {
   const location = useLocation();
@@ -34,7 +35,7 @@ function EmployeeProductivityMonitoring() {
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
 
-  const API_BASE_URL = "http://192.168.122.131:8081/api/employeeproductivity";
+  const API_BASE_URL = apiUrl("/api/employeeproductivity");
 
   useEffect(() => {
     if (selectedEmployeeId) {
@@ -159,6 +160,7 @@ function EmployeeProductivityMonitoring() {
     // Prepare the payload matching your backend entity
     const payload = {
       employeeId: selectedEmployeeId,
+      employeeName: selectedEmployeeName || "",
       date: currentEntry.date,
       hoursWorked: Number(currentEntry.hoursWorked) || 0,
       goalsAssigned: Number(currentEntry.goalsAssigned) || 0,

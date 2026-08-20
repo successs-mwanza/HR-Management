@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { apiUrl } from "../apiConfig";
 import "./login.css";
 
 function Login() {
@@ -35,7 +36,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://192.168.122.131:8081/api/login", {
+      const response = await fetch(apiUrl("/api/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
