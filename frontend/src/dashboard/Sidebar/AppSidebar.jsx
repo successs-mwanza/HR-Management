@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { apiUrl } from "../../apiConfig";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import hrLogo from "./human-resource-logo-design-inspiration-vector-illustration_500223-487.avif";

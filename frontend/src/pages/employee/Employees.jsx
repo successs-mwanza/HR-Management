@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // ✅ ADD THIS IMPORT
-import { apiUrl } from "../../apiConfig";
+
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 function EmployeeIndex() {

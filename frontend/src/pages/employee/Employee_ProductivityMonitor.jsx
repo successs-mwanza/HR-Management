@@ -9,7 +9,7 @@ import {
   Calendar, Clock, CheckCircle, TrendingUp, Award, 
   AlertCircle, Users, Target, Zap 
 } from "lucide-react";
-import { apiUrl } from "../../apiConfig";
+
 
 function EmployeeProductivityMonitoring() {
   const location = useLocation();

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import { apiUrl } from "../../apiConfig";
+
 
 function EmployeeReport() {
   const { employeeId } = useParams();

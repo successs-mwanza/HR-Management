@@ -1,7 +1,6 @@
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { apiUrl } from "../../apiConfig";
 
 const getPageTitle = (pathname) => {
   if (pathname.startsWith("/employees")) return "Employee Management";

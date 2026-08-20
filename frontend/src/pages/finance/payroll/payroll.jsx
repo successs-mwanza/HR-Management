@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { apiUrl } from "../../../apiConfig";
+
 
 function Payroll() {
   const [basicSalary, setBasicSalary] = useState(0);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { apiUrl } from "../../apiConfig";
+
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,
