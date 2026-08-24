@@ -36,7 +36,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: YOUR_DOCKERHUB_USERNAME/hr-management-frontend:latest
+    image: ${DockerHub_Username}/hr-management-frontend:latest
     container_name: hrs_frontend
     ports:
       - "3000:3000"
