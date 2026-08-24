@@ -1,0 +1,144 @@
+# HR Management System
+
+A web-based HR Management System built with **React**, **Spring Boot**, **PostgreSQL**, and **Docker**.
+
+## Technologies
+
+* Frontend: React
+* Backend: Spring Boot / Java 17
+* Database: PostgreSQL 15
+* Containerization: Docker & Docker Compose
+* CI/CD: GitHub Actions
+* Deployment: Docker Hub + VPS
+
+## Project Structure
+
+```text
+HR-Management/
+├── frontend/                 # React frontend
+├── src/                      # Spring Boot backend
+├── dockerfile                # Backend Dockerfile
+├── Docker-compose.prod.yml   # Production configuration
+├── docker-compose.dev.yml    # Development configuration
+├── pom.xml                   # Maven configuration
+├── mvnw                      # Maven wrapper
+└── package.json
+```
+
+## Running in Development
+
+Start the development containers:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d --build
+```
+
+The application will be available at:
+
+```text
+Frontend: http://localhost:3000
+Backend:  http://localhost:8081
+Database: localhost:5433
+```
+
+Stop the containers:
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
+## Running in Production
+
+The production environment uses Docker images from Docker Hub.
+
+First, make sure your `.env` file exists on the server:
+
+```env
+POSTGRES_PASSWORD=your-secure-password
+```
+
+Pull the latest images:
+
+```bash
+docker compose -f Docker-compose.prod.yml pull
+```
+
+Start the application:
+
+```bash
+docker compose -f Docker-compose.prod.yml up -d
+```
+
+Check running containers:
+
+```bash
+docker ps
+```
+
+Stop the application:
+
+```bash
+docker compose -f Docker-compose.prod.yml down
+```
+
+## CI/CD
+
+The project uses **GitHub Actions**.
+
+When code is pushed to the `main` branch:
+
+```text
+Git Push
+   ↓
+GitHub Actions
+   ↓
+Build Backend
+   ↓
+Build Frontend
+   ↓
+Build Docker Images
+   ↓
+Push Images to Docker Hub
+   ↓
+Deploy to VPS
+```
+
+Docker Hub credentials are stored securely as GitHub repository secrets:
+
+```text
+DOCKERHUB_USERNAME
+DOCKERHUB_TOKEN
+```
+
+## Database
+
+PostgreSQL is used as the application database.
+
+Development:
+
+```text
+Database: HRS
+Username: postgres
+Port: 5433
+```
+
+Inside Docker, the backend connects to PostgreSQL using:
+
+```text
+jdbc:postgresql://postgres:5432/HRS
+```
+
+## Production
+
+The production environment should use:
+
+* A strong PostgreSQL password
+* HTTPS
+* A domain name
+* Nginx as a reverse proxy
+* Docker Hub images
+* GitHub Actions for deployment
+
+## Author
+
+**Success Mwanza**

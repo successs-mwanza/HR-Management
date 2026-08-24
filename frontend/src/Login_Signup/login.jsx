@@ -67,7 +67,7 @@ function Login() {
   return (
     <div className="signup-container">
       <form className="signup-form" onSubmit={handleSubmit}>
-        <h2>Login</h2>
+        <h2>Sign In</h2>
 
         {error && <p className="error">{error}</p>}
 
@@ -88,7 +88,7 @@ function Login() {
         />
 
         <button type="submit" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Signing in..." : "Sign In"}
         </button>
 
         <p>
