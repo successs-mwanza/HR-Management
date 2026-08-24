@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: YOUR_DOCKERHUB_USERNAME/hr-management-backend:latest
+    image: ${DockerHub_Username}/hr-management-backend:latest
     container_name: hrs_backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/HRS
