@@ -66,7 +66,7 @@ function Sidebar({ sidebarOpen, setSidebarOpen }) {
     // Fetch from backend for more complete user data
     const token = localStorage.getItem("token");
     if (token) {
-      fetch(apiUrl("/api/users/me"), {
+      fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8081/api'}/users/me`, {
         headers: {
           Authorization: "Bearer " + token,
         },

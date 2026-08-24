@@ -35,7 +35,7 @@ function ProductivityMonitoring() {
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
 
-  const API_BASE_URL = http://192.168.122.133:3000("/api/productivity-monitoring");
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
 
   // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];

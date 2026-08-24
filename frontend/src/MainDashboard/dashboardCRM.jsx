@@ -12,10 +12,11 @@ function DashboardCRM() {
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
 
+    const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
     Promise.all([
-      fetch(apiUrl('/api/employees')).then((res) => (res.ok ? res.json() : [])),
-      fetch(apiUrl('/api/income-expenses')).then((res) => (res.ok ? res.json() : [])),
-      fetch(apiUrl(`/api/attendance/stats?date=${today}`)).then((res) => (res.ok ? res.json() : null)),
+      fetch(`${BASE}/employees`).then((res) => (res.ok ? res.json() : [])),
+      fetch(`${BASE}/income-expenses`).then((res) => (res.ok ? res.json() : [])),
+      fetch(`${BASE}/attendance/stats?date=${today}`).then((res) => (res.ok ? res.json() : null)),
     ])
       .then(([employees, transactions, attendance]) => {
         setStats({

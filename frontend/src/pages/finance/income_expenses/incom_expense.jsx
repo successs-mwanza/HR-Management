@@ -8,7 +8,7 @@ function IncomeExpense() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const API_BASE_URL = apiUrl("/api/income-expenses");
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
 
   const [formData, setFormData] = useState({
     type: "income",

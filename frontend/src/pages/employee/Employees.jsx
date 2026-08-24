@@ -13,6 +13,7 @@ function EmployeeIndex() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
+  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8081/api";
 
   // Notification state
   const [notification, setNotification] = useState({ show: false, message: "", type: "" });
@@ -65,7 +66,7 @@ function EmployeeIndex() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch(apiUrl("/api/employees"));
+      const response = await fetch(`${API_BASE}/employees`);
       if (!response.ok) throw new Error("Failed to fetch employees");
       const data = await response.json();
       const list = Array.isArray(data) ? data : data.data || data.content || [];
@@ -152,7 +153,7 @@ function EmployeeIndex() {
   const handleDelete = async () => {
     const id = deleteConfirm.id;
     try {
-      await fetch(apiUrl(`/api/employees/${id}`), {
+      await fetch(`${API_BASE}/employees/${id}`, {
         method: "DELETE",
       });
 
@@ -200,7 +201,7 @@ function EmployeeIndex() {
     }
 
     try {
-      const response = await fetch(apiUrl("/api/employees"), {
+      const response = await fetch(`${API_BASE}/employees`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -253,7 +254,7 @@ function EmployeeIndex() {
     }
 
     try {
-      const response = await fetch(apiUrl(`/api/employees/${editFormData.id}`), {
+      const response = await fetch(`${API_BASE}/employees/${editFormData.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

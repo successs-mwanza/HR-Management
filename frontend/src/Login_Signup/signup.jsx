@@ -81,7 +81,7 @@ function Signup() {
     setLoading(true);
 
     try {
-      const response = await fetch(apiUrl("/api/signup"), {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8081/api'}/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

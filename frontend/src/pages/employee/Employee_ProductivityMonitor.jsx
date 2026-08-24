@@ -35,7 +35,7 @@ function EmployeeProductivityMonitoring() {
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
 
-  const API_BASE_URL = apiUrl("/api/employeeproductivity");
+  const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8081/api"; //API entry point 
 
   useEffect(() => {
     if (selectedEmployeeId) {

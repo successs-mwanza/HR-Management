@@ -14,7 +14,8 @@ function Payroll() {
 
   // ✅ Fetch employees with loading state
   useEffect(() => {
-    fetch(apiUrl("/api/employees"))
+    const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+    fetch(`${BASE}/employees`)
       .then((res) => res.json())
       .then((data) => {
         console.log("Employees:", data); // debug
@@ -49,7 +50,8 @@ function Payroll() {
       netSalary,
     };
 
-    fetch(apiUrl("/api/payroll"), {
+    const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+    fetch(`${BASE}/payroll`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

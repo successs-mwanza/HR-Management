@@ -35,7 +35,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch(apiUrl("/api/login"), {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8081/api'}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -94,7 +94,7 @@ function Login() {
         <p>
           Don't have an account?{" "}
           <span onClick={() => navigate("/signup")}>
-            Sign Up
+            <strong>Sign up</strong>
           </span>
         </p>
       </form>

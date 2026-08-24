@@ -22,8 +22,7 @@ function Navbar({ sidebarOpen, setSidebarOpen }) {
     }
 
     // Option 2 (better): fetch from backend
-    
-    fetch(apiUrl("/api/users/me"), {
+    fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8081/api'}/users/me`, {
       headers: {
         Authorization: "Bearer " + localStorage.getItem("token"),
       },

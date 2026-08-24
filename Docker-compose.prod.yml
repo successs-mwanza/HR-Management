@@ -1,12 +1,12 @@
 services:
+
   postgres:
     image: postgres:15-alpine
     container_name: hrs_postgres
     environment:
       POSTGRES_DB: HRS
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -15,17 +15,15 @@ services:
       timeout: 10s
       retries: 10
       start_period: 10s
+    restart: unless-stopped
 
   backend:
-    image: hr-management-backend:v1.0   #for changing image version backend
-    build:
-      context: .
-      dockerfile: dockerfile
+    image: YOUR_DOCKERHUB_USERNAME/hr-management-backend:latest
     container_name: hrs_backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/HRS
       SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: 1234
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 5
@@ -38,20 +36,15 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: hr-management-frontend:v1.0  #for changing image version frontend
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: YOUR_DOCKERHUB_USERNAME/hr-management-frontend:latest
     container_name: hrs_frontend
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://postgres:8081/api
+      - REACT_APP_API_URL=/api
     depends_on:
       - backend
     restart: unless-stopped
-    stdin_open: true
-    tty: true
 
 volumes:
   postgres_data:
