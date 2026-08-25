@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: ${DockerHub_Username}/hr-management-backend:latest
+    image: ${DOCKERHUB_USERNAME}/hr-management-backend:latest
     container_name: hrs_backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/HRS
@@ -36,15 +36,17 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${DockerHub_Username}/hr-management-frontend:latest
+    image: ${DOCKERHUB_USERNAME}/hr-management-frontend:latest
     container_name: hrs_frontend
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_BASE_URL=http://192.168.122.133
+      - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
     depends_on:
       - backend
     restart: unless-stopped
+    stdin_open: true
+    tty: true
 
 volumes:
   postgres_data:
