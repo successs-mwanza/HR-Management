@@ -58,7 +58,7 @@ jobs:
 
   docker:
     name: Docker Publish
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
     needs: [backend, frontend]
     runs-on: ubuntu-latest
 

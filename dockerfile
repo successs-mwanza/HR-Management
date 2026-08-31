@@ -6,11 +6,11 @@ COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
-RUN ./mvnw dependency:go-offline -B
+RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
 
 COPY src src
 
-RUN ./mvnw package -DskipTests
+RUN chmod +x mvnw && ./mvnw package -DskipTests
 
 EXPOSE 8081
 
