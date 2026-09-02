@@ -166,7 +166,7 @@ function Signup() {
         <p>
           Already have an account?{" "}
           <span onClick={() => navigate("/login")}>
-            Login
+            <b>Login</b>
           </span>
         </p>
       </form>
