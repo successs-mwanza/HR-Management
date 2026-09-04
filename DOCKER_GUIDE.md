@@ -269,6 +269,20 @@ docker-compose up --build
 
 4. **Add `.env` to `.gitignore`** (never commit secrets!)
 
+### Automatic CI/CD Deployment
+
+Pushes to `main` or `master` run the tests, publish both Docker images, and deploy them over SSH. Configure these GitHub repository secrets before using the deployment job:
+
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+- `SERVER_HOST`
+- `SERVER_USER`
+- `SERVER_SSH_KEY`
+- `SERVER_APP_PATH` (the existing application directory on the server)
+- `POSTGRES_PASSWORD`
+
+The SSH user must be able to run Docker commands. The server must already have Docker and Docker Compose installed.
+
 ---
 
 ## Files Modified

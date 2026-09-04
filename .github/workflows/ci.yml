@@ -67,35 +67,58 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Verify secrets exist using intermediate environment variables before running Docker steps
-      - name: Check Docker Hub Credentials
-        id: check-secrets
-        env:
-          DOCKER_USER: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        run: |
-          if [ -z "$DOCKER_USER" ] || [ -z "$DOCKER_TOKEN" ]; then
-            echo "Missing required Docker Hub secrets. Skipping publishing."
-            echo "run_publish=false" >> $GITHUB_OUTPUT
-          else
-            echo "run_publish=true" >> $GITHUB_OUTPUT
-          fi
-
       - name: Log in to Docker Hub
-        if: steps.check-secrets.outputs.run_publish == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push backend image
-        if: steps.check-secrets.outputs.run_publish == 'true'
         run: |
           docker build -f dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/hr-management-backend:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/hr-management-backend:latest
 
       - name: Build and push frontend image
-        if: steps.check-secrets.outputs.run_publish == 'true'
         run: |
           docker build -f frontend/Dockerfile -t ${{ secrets.DOCKERHUB_USERNAME }}/hr-management-frontend:latest ./frontend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/hr-management-frontend:latest
+
+  deploy:
+    name: Deploy to server
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    needs: docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout deployment configuration
+        uses: actions/checkout@v4
+
+      - name: Copy production Compose file
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          source: docker-compose.prod.yml
+          target: ${{ secrets.SERVER_APP_PATH }}
+
+      - name: Deploy Docker images over SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script_stop: true
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,POSTGRES_PASSWORD,APP_PATH
+          script: |
+            set -eu
+            cd "$APP_PATH"
+            printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker image prune -f
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          APP_PATH: ${{ secrets.SERVER_APP_PATH }}
