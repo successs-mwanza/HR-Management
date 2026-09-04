@@ -101,16 +101,6 @@ function DashboardCRM() {
         </div>
       </div>
 
-      {/* Main Content - Your dashboard content below */}
-      <div className="dashboard-container" style={{ padding: '24px' }}>
-        {/* Your navbar and other content would go here */}
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ margin: 0, fontSize: '28px', color: '#111827' }}></h1>
-          <p style={{ margin: '8px 0 0', color: '#6b7280' }}>
-            
-          </p>
-        </div>
-      </div>
     </>
   );
 }

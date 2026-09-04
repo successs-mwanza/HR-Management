@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,
-  AreaChart, Area
+  ResponsiveContainer, LineChart, Line
 } from "recharts";
 import { 
-  Calendar, Clock, CheckCircle, TrendingUp, Award, 
-  AlertCircle, Users, Target, Zap 
+  Clock, CheckCircle, TrendingUp, Award, AlertCircle, Users, Target, Zap 
 } from "lucide-react";
 
 
@@ -37,13 +35,7 @@ function EmployeeProductivityMonitoring() {
 
   const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8081/api"; //API entry point 
 
-  useEffect(() => {
-    if (selectedEmployeeId) {
-      fetchProductivityData();
-    }
-  }, [selectedEmployeeId]);
-
-  const fetchProductivityData = async () => {
+  const fetchProductivityData = useCallback(async () => {
     setLoading(true);
     setError("");
 
@@ -81,7 +73,13 @@ function EmployeeProductivityMonitoring() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL, selectedEmployeeId, selectedEmployeeName]);
+
+  useEffect(() => {
+    if (selectedEmployeeId) {
+      fetchProductivityData();
+    }
+  }, [selectedEmployeeId, fetchProductivityData]);
 
   // Calculate statistics
   const getStatistics = () => {

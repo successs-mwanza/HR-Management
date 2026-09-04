@@ -93,9 +93,9 @@ function EmployeeReport() {
     }
   }, [employeeId]);
 
-  const getEmployeeFullName = () => {
+  const getEmployeeFullName = useCallback(() => {
     return `${employee?.firstName || ""} ${employee?.middleName || ""} ${employee?.lastName || ""}`.trim();
-  };
+  }, [employee]);
 
   const fetchEmployeeProductivity = useCallback(async () => {
     if (!employeeId) return;
@@ -156,7 +156,7 @@ function EmployeeReport() {
     } catch (err) {
       console.error(err);
     }
-  }, [employee]);
+  }, [employee, getEmployeeFullName]);
 
   const applyFilter = useCallback(() => {
     let start = "";

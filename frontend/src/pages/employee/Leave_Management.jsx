@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,
-  AreaChart, Area
+  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
 } from "recharts";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
@@ -11,16 +10,7 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api
 function LeaveManagement() {
   // State Management
   const [leaveRequests, setLeaveRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchLeaveRequests();
-  }, []);
-
-  const fetchLeaveRequests = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchLeaveRequests = useCallback(async () => {
     try {
       const response = await fetch(API_BASE_URL);
       if (!response.ok) {
@@ -29,11 +19,13 @@ function LeaveManagement() {
       const data = await response.json();
       setLeaveRequests(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err.message);
     } finally {
-      setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLeaveRequests();
+  }, [fetchLeaveRequests]);
 
   const [currentLeave, setCurrentLeave] = useState({
     employeeName: "",
@@ -198,9 +190,7 @@ function LeaveManagement() {
       resetForm();
       setShowForm(false);
       setEditingLeave(null);
-      setError(null);
     } catch (err) {
-      setError(err.message || "Unable to save leave request");
     }
   };
 
@@ -268,7 +258,6 @@ function LeaveManagement() {
 
       setLeaveRequests(prev => prev.filter(l => l.id !== id));
     } catch (err) {
-      setError(err.message);
     }
   };
 
@@ -298,7 +287,6 @@ function LeaveManagement() {
 
       await fetchLeaveRequests();
     } catch (err) {
-      setError(err.message);
     }
   };
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom"; // ✅ ADD THIS IMPORT
 
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -60,11 +60,7 @@ function EmployeeIndex() {
   const [reportData, setReportData] = useState(null);
   const [loadingReport, setLoadingReport] = useState(false);
 
-  useEffect(() => {
-    fetchEmployees();
-  }, []);
-
-  const fetchEmployees = async () => {
+  const fetchEmployees = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/employees`);
       if (!response.ok) throw new Error("Failed to fetch employees");
@@ -76,7 +72,11 @@ function EmployeeIndex() {
       setError(err.message);
       setLoading(false);
     }
-  };
+  }, [API_BASE]);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [fetchEmployees]);
 
   // Auto-hide notification after 2 seconds
   useEffect(() => {

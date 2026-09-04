@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
 import jsPDF from "jspdf";
@@ -29,22 +29,17 @@ function TransactionHistory() {
     id: null,
   });
 
-  // Fetch transactions from backend
-  useEffect(() => {
-    fetchTransactions();
-  }, []);
-
   // Auto-hide notification after 3 seconds
   useEffect(() => {
     if (notification.show) {
       const timer = setTimeout(() => {
-        setNotification({ ...notification, show: false });
+        setNotification(current => ({ ...current, show: false }));
       }, 3000);
       return () => clearTimeout(timer);
     }
   }, [notification.show]);
 
-  const fetchTransactions = async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(API_BASE_URL);
@@ -60,7 +55,12 @@ function TransactionHistory() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL]);
+
+  // Fetch transactions from backend
+  useEffect(() => {
+    fetchTransactions();
+  }, [fetchTransactions]);
 
   const showNotification = (title, message, type = "success") => {
     setNotification({

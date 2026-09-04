@@ -1,21 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
 
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line,
-  AreaChart, Area
+  ResponsiveContainer, LineChart, Line
 } from "recharts";
-import { 
-  Calendar, Clock, CheckCircle, TrendingUp, Award, 
-  AlertCircle, Users, Target, Zap 
-} from "lucide-react";
+import { Clock, CheckCircle, TrendingUp, Award, Target, Zap } from "lucide-react";
 
 function ProductivityMonitoring() {
-  const location = useLocation();
-  const selectedEmployeeName = location.state?.employeeName;
-  const selectedEmployeeId = location.state?.employeeId;
-
   // State Management
   const [productivityData, setProductivityData] = useState([]);
   const [currentEntry, setCurrentEntry] = useState({
@@ -30,27 +21,13 @@ function ProductivityMonitoring() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [filter, setFilter] = useState("week"); // week, month, year
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
 
   const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
 
-  // Colors for charts
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
-  const STATUS_COLORS = {
-    completed: '#10B981',
-    inProgress: '#F59E0B',
-    pending: '#EF4444',
-    review: '#8B5CF6'
-  };
-
-  useEffect(() => {
-    fetchProductivityData();
-  }, []);
-
-  const fetchProductivityData = async () => {
+  const fetchProductivityData = useCallback(async () => {
     setLoading(true);
     setError("");
 
@@ -68,7 +45,11 @@ function ProductivityMonitoring() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    fetchProductivityData();
+  }, [fetchProductivityData]);
 
   // Calculate statistics
   const getStatistics = () => {
