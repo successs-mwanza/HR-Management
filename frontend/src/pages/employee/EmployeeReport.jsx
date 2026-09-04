@@ -49,7 +49,7 @@ function EmployeeReport() {
 
   const fetchEmployeeDetails = useCallback(async () => {
     try {
-      const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+      const BASE = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8081/api`;
       const response = await fetch(`${BASE}/employees/${employeeId}`);
       if (!response.ok) throw new Error("Failed to fetch employee details");
       const data = await response.json();
@@ -79,7 +79,7 @@ function EmployeeReport() {
   const fetchEmployeeAttendance = useCallback(async (start, end) => {
     try {
       setLoading(true);
-      const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+      const BASE = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8081/api`;
       const response = await fetch(`${BASE}/attendance/employee/${employeeId}?startDate=${start}&endDate=${end}`);
       if (!response.ok) throw new Error("Failed to fetch attendance");
       const data = await response.json();
@@ -100,7 +100,7 @@ function EmployeeReport() {
   const fetchEmployeeProductivity = useCallback(async () => {
     if (!employeeId) return;
     try {
-      const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+      const BASE = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8081/api`;
       const response = await fetch(`${BASE}/employeeproductivity`);
       if (!response.ok) throw new Error("Failed to fetch productivity data");
       const data = await response.json();
@@ -130,7 +130,7 @@ function EmployeeReport() {
     if (!employee) return;
 
     try {
-      const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+      const BASE = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8081/api`;
       const response = await fetch(`${BASE}/leave-management`);
       if (!response.ok) throw new Error("Failed to fetch leave records");
       const data = await response.json();

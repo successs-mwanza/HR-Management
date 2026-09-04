@@ -13,7 +13,7 @@ function EmployeeIndex() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
-  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8081/api";
+  const API_BASE = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8081/api`;
 
   // Notification state
   const [notification, setNotification] = useState({ show: false, message: "", type: "" });

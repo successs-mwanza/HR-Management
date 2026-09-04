@@ -14,7 +14,7 @@ function Payroll() {
 
   // ✅ Fetch employees with loading state
   useEffect(() => {
-    const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+    const BASE = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8081/api`;
     fetch(`${BASE}/employees`)
       .then((res) => res.json())
       .then((data) => {
@@ -50,7 +50,7 @@ function Payroll() {
       netSalary,
     };
 
-    const BASE = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+    const BASE = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8081/api`;
     fetch(`${BASE}/payroll`, {
       method: "POST",
       headers: {

@@ -25,7 +25,7 @@ function ProductivityMonitoring() {
   const [showForm, setShowForm] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8081/api`;
 
   const fetchProductivityData = useCallback(async () => {
     setLoading(true);

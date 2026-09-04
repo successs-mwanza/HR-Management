@@ -35,7 +35,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:8081/api'}/login`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8081/api`}/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

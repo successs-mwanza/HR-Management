@@ -46,8 +46,6 @@ services:
     container_name: hrs_frontend_dev
     ports:
       - "3000:3000"
-    environment:
-      - REACT_APP_API_URL=http://localhost:8081/api
     depends_on:
       - backend
     restart: unless-stopped

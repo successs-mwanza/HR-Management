@@ -5,7 +5,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line
 } from "recharts";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8081/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8081/api`;
 
 function LeaveManagement() {
   // State Management
